@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.preview/
+*.log
+*.local
+.DS_Store
+docs/zone-map-design-strategy.md
