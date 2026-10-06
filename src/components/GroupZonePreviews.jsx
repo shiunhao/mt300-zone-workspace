@@ -42,23 +42,28 @@ function PreviewMap({ group, zones, view }) {
   </svg>;
 }
 
-export default function GroupZonePreviews({ groups, currentGroupId, maps, active, onSelectGroup }) {
-  const otherGroups = groups.filter((group) => group.id !== currentGroupId);
+export default function GroupZonePreviews({ groups, currentGroupId, initialGroupId = currentGroupId, maps, active, onSelectGroup, onToggleGroup }) {
   const view = previewView(maps);
-  return <aside className="group-zone-previews" aria-label="Other group previews">
-    <header><h3>Other groups</h3><p>Select a preview to edit</p></header>
+  return <aside className="group-zone-previews" aria-label="Group previews">
     <div className="group-zone-previews__list">
-      {otherGroups.map((group) => {
+      {groups.map((group) => {
         const muted = group.enabled === false || group.pickupMode !== 'Talker Position';
-        return <button key={group.id} type="button" className={`group-zone-previews__card${muted ? ' is-muted' : ''}`}
-          style={{ '--preview-color': getGroupReferenceColor(group.id) }} disabled={!active}
-          aria-label={`Edit ${group.id} ${group.camera} zones${group.enabled === false ? ', group disabled' : ''}`}
-          onClick={() => onSelectGroup(group.id)}>
-          <span className="group-zone-previews__heading"><span className="group-zone-previews__dot" /><strong>{group.id}</strong><span>{group.camera}</span></span>
-          <PreviewMap group={group} zones={maps[group.id] || []} view={view} />
-        </button>;
+        const selected = group.id === currentGroupId;
+        return <div key={group.id} className={`group-zone-previews__card${muted ? ' is-muted' : ''}${selected ? ' is-selected' : ''}`}
+          style={{ '--preview-color': getGroupReferenceColor(group.id) }}>
+          <button type="button" className="group-zone-previews__select" disabled={!active}
+            aria-label={`Edit ${group.id} ${group.camera} zones${group.enabled === false ? ', group disabled' : ''}`}
+            aria-pressed={selected} data-initial-focus={group.id === initialGroupId ? '' : undefined}
+            onClick={() => onSelectGroup(group.id)}>
+            <span className="group-zone-previews__heading"><span className="group-zone-previews__dot" /><strong>{group.id}</strong><span>{group.camera}</span></span>
+            <PreviewMap group={group} zones={maps[group.id] || []} view={view} />
+          </button>
+          <button type="button" className={`switch group-zone-previews__switch${group.enabled !== false ? ' is-on' : ''}`}
+            role="switch" aria-checked={group.enabled !== false} aria-label={`Enable ${group.id} in map setting`}
+            disabled={!active || !onToggleGroup} onClick={() => onToggleGroup?.(group.id)}><span /></button>
+        </div>;
       })}
-      {!otherGroups.length && <p className="group-zone-previews__none">No other groups</p>}
+      {!groups.length && <p className="group-zone-previews__none">No groups</p>}
     </div>
   </aside>;
 }

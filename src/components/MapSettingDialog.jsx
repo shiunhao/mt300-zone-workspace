@@ -20,7 +20,6 @@ export default function MapSettingDialog({
   const groupSelectId = useId();
   const statusId = useId();
   const dialogRef = useRef(null);
-  const groupSelectRef = useRef(null);
   const [editingGroupId, setEditingGroupId] = useState(initialGroupId);
   const [previewMaps, setPreviewMaps] = useState(() => createWorkspaceMaps(groups));
   const hasPreviews = variant === 'previews';
@@ -65,12 +64,11 @@ export default function MapSettingDialog({
       >
         <header className="map-setting-dialog__header">
           <h2 id={titleId}>Zone Map</h2>
-          <div className="map-setting-dialog__group-controls">
+          {!hasPreviews && <div className="map-setting-dialog__group-controls">
             <label htmlFor={groupSelectId}>Group</label>
             <div className="select-field map-setting-dialog__group-select">
               <select
                 id={groupSelectId}
-                ref={groupSelectRef}
                 value={groupId}
                 disabled={!open || !groups.length}
                 data-initial-focus
@@ -90,7 +88,7 @@ export default function MapSettingDialog({
               disabled={!open || !selectedGroup || !onToggleGroup}
               onClick={() => onToggleGroup?.(groupId)}
             ><span /></button>
-          </div>
+          </div>}
           <button
             className="icon-button map-setting-dialog__close"
             type="button"
@@ -103,12 +101,11 @@ export default function MapSettingDialog({
           {hasPreviews && <GroupZonePreviews
             groups={previewGroups}
             currentGroupId={groupId}
+            initialGroupId={initialGroupId}
             maps={previewMaps}
             active={open}
-            onSelectGroup={(id) => {
-              setEditingGroupId(id);
-              requestAnimationFrame(() => groupSelectRef.current?.focus());
-            }}
+            onSelectGroup={setEditingGroupId}
+            onToggleGroup={onToggleGroup}
           />}
           <div className="map-setting-dialog__editor">
             {status && <p className="map-setting-dialog__status" id={statusId} role="status">{status}</p>}
