@@ -25,7 +25,7 @@ npm run build
 - Profile、Output Layout、Position view 保留截圖中的選項。
 - Channel Configure 提供 Lobe／Coverage／Talker Position 與對應欄位，Map Setting 依版本進入分頁、工作區或設定視窗。
 - 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V2 Zone Workspace、V3 Map Setting Dialog、V4 Group Previews；V3／V4 Zone Map 視窗開啟時隱藏選單，關閉後恢復。V0 原版已移除。
-- 預覽初始進入 V4 Channel，只有 Channel／Active Position 兩個子分頁，V3／V4 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V2 的按鈕依序為 Channel Configure、Zone Map、Time；Zone Map 進入 Zone Workspace，Back to Channel 返回並保留地圖設定。V1 保留 Zone Map 子分頁。
+- 預覽初始進入 V4 Channel，只有 Channel／Active Position 兩個子分頁。V2／V4 的按鈕依序為 Channel Configure、Zone Map、Time；V2 開啟 Zone Workspace，V4 直接開啟 Group Previews 設定視窗，關閉後回到 Channel 並保留地圖設定。V3 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V1 保留 Zone Map 子分頁。
 - 版本選單沿用 S311／TR615 的緊湊選單形式，位於 Help／X 下方，不占用原有按鈕的位置。
 - 同一個下拉選單可切換「使用者回饋與痛點」討論頁，列出 AVtech Media／Nathan 測試 MT500 V22 的完整英文原文、中文翻譯、痛點整理，以及客戶全域設定要求與 Jira 跨 Group 參照方案的差異。返回設計時保留目前版本、Group、分頁、搜尋及本次頁面的地圖設定。
 - 回饋頁以獨立置中內容區呈現，隱藏產品導覽、Profile、模式分頁與 Help／Close，也不顯示返回按鈕；右上角保留下拉選單，直接切換回 V1～V4。
@@ -36,7 +36,7 @@ npm run build
 - V2 的 Back to Channel 返回所選 Group，Map Setting 捷徑也可開啟 Zone Workspace；切換保留地圖資料、視角與其他圖層顯示選擇。
 - V3 沿用原設計流程：Channel Configure → Talker Position → Map Setting → Zone Map 視窗。視窗上方可切換 Group 與啟用狀態，當前組可直接編輯，其他組可作為彩色虛線參照；保留新增、刪除、四角縮放、手動座標與尺寸、重疊排斥、51 × 51 格平移與 25%～150% 縮放。各組與各方案的地圖資料獨立，關閉或切換後仍保留本次頁面的資料。
 - V3 關閉地圖視窗後回到原本的 Channel Configure，保留尚未儲存的 Pickup Mode；在草稿中選 Talker Position 即可開啟 Map Setting，不會自動儲存模式。切換視窗內 Group 不改變原本 Configure 的 Group；其他組仍受已儲存的 Pickup Mode 與停用狀態限制。
-- V4 Group Previews 沿用 V3 的設定視窗入口，左側將所有 Groups 各自顯示為一張唯讀縮圖，中間主圖只編輯目前 Group，右側保留 Zone settings。點縮圖切換編輯組，目前組以藍色框線標示，各卡片提供獨立啟用開關；上方只有 Zone Map 與關閉按鈕，移除 Group 下拉選單、啟用開關及縮圖區小標題。左側獨立捲動，小螢幕改為橫向縮圖列。各縮圖採用相同原點與比例，包含麥克風、Zone 編號及各組固定顏色，停用組反灰。已提交的新增、刪除、位置與尺寸變更同步反映在縮圖中，V4 地圖資料與其他方案獨立保存。
+- V4 Group Previews 從 Channel Configure 旁的 Zone Map 按鈕直接進入，Channel Configure 內仍保留 Map Setting 捷徑。直接開啟使用當前 Group 已儲存的 Pickup Mode，非 Talker Position 的 Group 地圖維持反灰。左側將所有 Groups 各自顯示為一張唯讀縮圖，中間主圖只編輯目前 Group，右側保留 Zone settings。點縮圖切換編輯組，目前組以藍色框線標示，各卡片提供獨立啟用開關；上方只有 Zone Map 與關閉按鈕，移除 Group 下拉選單、啟用開關及縮圖區小標題。左側獨立捲動，小螢幕改為橫向縮圖列。各縮圖採用相同原點與比例，包含麥克風、Zone 編號及各組固定顏色，停用組反灰。已提交的新增、刪除、位置與尺寸變更同步反映在縮圖中，V4 地圖資料與其他方案獨立保存。
 - 新版支援 Zone 新增、選取、刪除、拖曳、四角尺寸調整，以及 X／Y／Width／Height 手動輸入。四角把手拖曳時固定對角，尺寸與座標欄位同步更新。選取狀態以加粗亮色框線與較深填色呈現，點擊地圖空白處解除選取。
 - 每個當前 Group 的 Zone 中心以虛線連接 mic，拖曳、調整尺寸或輸入數值時同步更新。
 - 桌面版三個分頁共用可用畫面高度；Zone Map 背景容器內整合麥克風型號、Add Zone、Remove Zone 與 View Other Groups’ Zones 下拉選單，右側設定面板分開。麥克風 ID 標題、Map 狀態 Badge、Reference groups 標題、底部圖例與展示文字已移除。

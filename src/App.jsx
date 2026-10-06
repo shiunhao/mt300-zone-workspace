@@ -119,8 +119,7 @@ export default function App() {
 
   const openMapSetting = (draft) => {
     if (usesMapDialog) {
-      if (draft?.pickupMode !== 'Talker Position') return
-      setMapEntryMode(draft.pickupMode)
+      setMapEntryMode(draft?.pickupMode ?? configuration.pickupMode)
       setMapSettingOpen(true)
       return
     }
@@ -228,7 +227,7 @@ export default function App() {
               </div>
               {selectedDetailTab !== 'zone' && <div className="detail-tab-actions">
                 {selectedDetailTab === 'channel' && <button className="button channel-configure-button" type="button" onClick={openConfigure}>Channel Configure</button>}
-                {designVersion === 'shared' && selectedDetailTab === 'channel' && <button className="button zone-map-entry-button" id="zone-map-button" type="button" onClick={openMapSetting}>Zone Map</button>}
+                {(designVersion === 'shared' || designVersion === 'previews') && selectedDetailTab === 'channel' && <button className="button zone-map-entry-button" id="zone-map-button" type="button" onClick={() => openMapSetting()}>Zone Map</button>}
                 <button className="button time-button" type="button"><Icon name="clock" size={17} /><span>Time</span></button>
               </div>}
             </div>
