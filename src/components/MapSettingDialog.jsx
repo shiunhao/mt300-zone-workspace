@@ -2,11 +2,14 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './Icon';
 import ZoneMapPanel from './ZoneMapPanel';
+import GroupZonePreviews from './GroupZonePreviews';
+import { createWorkspaceMaps } from './workspaceGeometry';
 import { useDialogFocus } from './ChannelConfigureDialog';
 import './MapSettingDialog.css';
 
 export default function MapSettingDialog({
   open = false,
+  variant = 'reference',
   groups = [],
   initialGroupId = 'G2',
   entryPickupMode,
@@ -17,7 +20,10 @@ export default function MapSettingDialog({
   const groupSelectId = useId();
   const statusId = useId();
   const dialogRef = useRef(null);
+  const groupSelectRef = useRef(null);
   const [editingGroupId, setEditingGroupId] = useState(initialGroupId);
+  const [previewMaps, setPreviewMaps] = useState(() => createWorkspaceMaps(groups));
+  const hasPreviews = variant === 'previews';
 
   useEffect(() => {
     if (open) setEditingGroupId(initialGroupId);
@@ -32,6 +38,8 @@ export default function MapSettingDialog({
     ? entryPickupMode : selectedGroup?.pickupMode || 'Talker Position';
   const talkerPosition = pickupMode === 'Talker Position';
   const groupEnabled = selectedGroup?.enabled !== false;
+  const previewGroups = groups.map((group) => group.id === initialGroupId && entryPickupMode
+    ? { ...group, pickupMode: entryPickupMode } : group);
   const status = !talkerPosition
     ? `${groupId} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
     : '';
@@ -45,7 +53,7 @@ export default function MapSettingDialog({
       }}
     >
       <section
-        className="map-setting-dialog"
+        className={`map-setting-dialog${hasPreviews ? ' map-setting-dialog--previews' : ''}`}
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
@@ -62,6 +70,7 @@ export default function MapSettingDialog({
             <div className="select-field map-setting-dialog__group-select">
               <select
                 id={groupSelectId}
+                ref={groupSelectRef}
                 value={groupId}
                 disabled={!open || !groups.length}
                 data-initial-focus
@@ -91,14 +100,29 @@ export default function MapSettingDialog({
           ><Icon name="close" size={22} /></button>
         </header>
         <div className="map-setting-dialog__body">
-          {status && <p className="map-setting-dialog__status" id={statusId} role="status">{status}</p>}
-          <ZoneMapPanel
-            variant="reference"
-            groupId={groupId}
-            groups={groups}
-            enabled={groupEnabled && talkerPosition}
+          {hasPreviews && <GroupZonePreviews
+            groups={previewGroups}
+            currentGroupId={groupId}
+            maps={previewMaps}
             active={open}
-          />
+            onSelectGroup={(id) => {
+              setEditingGroupId(id);
+              requestAnimationFrame(() => groupSelectRef.current?.focus());
+            }}
+          />}
+          <div className="map-setting-dialog__editor">
+            {status && <p className="map-setting-dialog__status" id={statusId} role="status">{status}</p>}
+            <ZoneMapPanel
+              variant="reference"
+              groupId={groupId}
+              groups={groups}
+              enabled={groupEnabled && talkerPosition}
+              active={open}
+              maps={hasPreviews ? previewMaps : undefined}
+              onMapsChange={hasPreviews ? setPreviewMaps : undefined}
+              showReferences={!hasPreviews}
+            />
+          </div>
         </div>
       </section>
     </div>,

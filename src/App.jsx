@@ -30,7 +30,7 @@ const detailTabTracks = {
   position: { start: '28%', width: '28%' },
   zone: { start: '56%', width: '44%' },
 }
-const designVersions = ['reference', 'shared', 'dialog']
+const designVersions = ['reference', 'shared', 'dialog', 'previews']
 const initialConfigurations = Object.fromEntries(designVersions.map((version) => [version,
   Object.fromEntries(initialGroups.map((group) => [group.id, {
     pickupMode: 'Talker Position',
@@ -74,8 +74,8 @@ function GroupItem({ group, selected, onSelect, onToggle }) {
 export default function App() {
   const [groups, setGroups] = useState(initialGroups)
   const [selectedGroupId, setSelectedGroupId] = useState('G2')
-  const [designVersion, setDesignVersion] = useState('dialog')
-  const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel', dialog: 'channel' })
+  const [designVersion, setDesignVersion] = useState('previews')
+  const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel', dialog: 'channel', previews: 'channel' })
   const [configurations, setConfigurations] = useState(initialConfigurations)
   const [configureOpen, setConfigureOpen] = useState(false)
   const [mapSettingOpen, setMapSettingOpen] = useState(false)
@@ -88,6 +88,7 @@ export default function App() {
   const tabTrack = designVersion === 'reference' ? detailTabTracks[selectedDetailTab] : { start: selectedDetailTab === 'position' ? '50%' : '0%', width: '50%' }
   const configuration = configurations[designVersion][selectedGroupId]
   const showZoneWorkspace = designVersion === 'shared' && detailRoute === 'zone'
+  const usesMapDialog = designVersion === 'dialog' || designVersion === 'previews'
   const setSelectedDetailTab = (tab) => setDetailTabsByVersion((current) => ({ ...current, [designVersion]: tab }))
 
   const switchDesignVersion = (version) => {
@@ -110,7 +111,7 @@ export default function App() {
   }
 
   const openMapSetting = (draft) => {
-    if (designVersion === 'dialog') {
+    if (usesMapDialog) {
       if (draft?.pickupMode !== 'Talker Position') return
       setMapEntryMode(draft.pickupMode)
       setMapSettingOpen(true)
@@ -145,7 +146,7 @@ export default function App() {
 
   return (
     <div className={`settings-shell design-${designVersion}`}>
-      <DesignVersionSwitcher value={designVersion} onChange={switchDesignVersion} hidden={designVersion === 'dialog' && mapSettingOpen} />
+      <DesignVersionSwitcher value={designVersion} onChange={switchDesignVersion} hidden={usesMapDialog && mapSettingOpen} />
       <aside className="sidebar" aria-label="Main navigation">
         <div className="product-name"><Icon name="device" size={26} /><span>MT300</span></div>
         <nav>
@@ -248,8 +249,9 @@ export default function App() {
           </section>
         </section>
       </main>
-      <ChannelConfigureDialog open={configureOpen} suspended={mapSettingOpen} groupId={selectedGroup.id} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={designVersion !== 'dialog'} mapTargetLabel={designVersion === 'shared' ? 'Zone Workspace' : 'Zone Map tab'} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
+      <ChannelConfigureDialog open={configureOpen} suspended={mapSettingOpen} groupId={selectedGroup.id} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} mapTargetLabel={designVersion === 'shared' ? 'Zone Workspace' : 'Zone Map tab'} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
       <MapSettingDialog open={designVersion === 'dialog' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.dialog[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
+      <MapSettingDialog variant="previews" open={designVersion === 'previews' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.previews[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
     </div>
   )
 }

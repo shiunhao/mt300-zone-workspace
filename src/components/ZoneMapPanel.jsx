@@ -134,7 +134,7 @@ function NumericField({ label, value, disabled, onCommit }) {
 export default function ZoneMapPanel({
   variant = 'reference', groupId = 'G2', groups = [], enabled = true, active = true,
   maps, onMapsChange, visibleGroupIds, overview = false, onSelectGroup, toolbarSlot,
-  selectedZoneId = null, onSelectedZoneChange,
+  selectedZoneId = null, onSelectedZoneChange, showReferences = true,
 }) {
   const isWorkspace = variant === 'workspace';
   const isOverview = isWorkspace && overview;
@@ -155,10 +155,10 @@ export default function ZoneMapPanel({
   const allGroups = groups.length ? groups : [{ id: 'G1', camera: 'TR535N' }, { id: 'G2', camera: 'TR211' }, { id: 'G3', camera: 'TR313' }];
   const otherGroups = allGroups.filter((group) => group.id !== groupId);
   const currentGroup = allGroups.find((group) => group.id === groupId) || { id: groupId, enabled, camera: '—' };
-  const availableMaps = isWorkspace ? maps || {} : groupMaps;
+  const availableMaps = maps ?? (isWorkspace ? {} : groupMaps);
   const visibleIds = new Set(visibleGroupIds || allGroups.map((group) => group.id));
   const visibleGroups = allGroups.filter((group) => visibleIds.has(group.id));
-  const referenceGroups = isWorkspace ? visibleGroups.filter((group) => group.id !== groupId) : otherGroups.filter((group) => references[group.id]);
+  const referenceGroups = isWorkspace ? visibleGroups.filter((group) => group.id !== groupId) : showReferences ? otherGroups.filter((group) => references[group.id]) : [];
   const selectionKey = groupId;
   const mapContext = `${variant}/${groupId}/${isOverview ? 'overview' : 'edit'}`;
   const currentZones = availableMaps[groupId] || [];
@@ -248,7 +248,7 @@ export default function ZoneMapPanel({
     if (!editable) return;
     const apply = (previous) => typeof updater === 'function' ? updater(previous) : updater;
     const updateMap = (previous) => ({ ...previous, [groupId]: apply(previous[groupId] || []) });
-    if (isWorkspace) onMapsChange?.(updateMap);
+    if (isWorkspace || maps !== undefined) onMapsChange?.(updateMap);
     else setGroupMaps(updateMap);
   }
   function updateZone(id, change) {
@@ -451,7 +451,7 @@ export default function ZoneMapPanel({
           <div className="zone-map__toolbar">
             <span className="zone-map__model">Shure MXA925-S</span>
             <div><button type="button" className="zone-map__button" disabled={!editable} onClick={addZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>
-            {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : <GroupReferenceDropdown groups={otherGroups} checked={references} disabled={!isInteractive} onChange={changeReference} />}
+            {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : showReferences && <GroupReferenceDropdown groups={otherGroups} checked={references} disabled={!isInteractive} onChange={changeReference} />}
           </div>
           <div className="zone-map__canvas-wrap" ref={mapRef}>
             <svg ref={svgRef} className={`zone-map__canvas${isPanning ? ' is-panning' : ''}`} viewBox={viewBox} data-grid-cells={GRID_CELLS} data-cell-size={CELL_SIZE} tabIndex={enabled ? undefined : -1} aria-disabled={!enabled} aria-label="Coverage zone map, 51 by 51 cells, microphone at origin" onClick={canvasClick} onPointerDown={beginPan} onPointerMove={movePointer} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={cancelGesture}>

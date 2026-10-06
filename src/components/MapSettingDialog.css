@@ -80,6 +80,19 @@
   font-size: 12px;
   line-height: 18px;
 }
+.map-setting-dialog__editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.map-setting-dialog--previews { width: min(1380px, 100%); }
+.map-setting-dialog--previews .map-setting-dialog__body {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: 16px;
+}
 .map-setting-dialog .zone-map__layout { grid-template-columns: minmax(0, 1fr) 228px; gap: 16px; }
 .map-setting-dialog .zone-map__canvas-wrap { min-height: 0; }
 .map-setting-dialog .zone-map__toolbar { gap: 8px; }
@@ -89,6 +102,8 @@ body:has(.map-setting-overlay:not([hidden])) .group-reference-menu { z-index: 12
 
 @media (max-width: 1099px) {
   .map-setting-dialog .zone-map__layout { grid-template-columns: minmax(0, 1fr) 210px; gap: 12px; }
+  .map-setting-dialog--previews .map-setting-dialog__body { grid-template-columns: 176px minmax(0, 1fr); gap: 12px; }
+  .map-setting-dialog--previews .zone-map__layout { grid-template-columns: minmax(0, 1fr) 184px; }
 }
 @media (max-width: 699px) {
   .map-setting-overlay { padding: 12px; }
@@ -104,4 +119,6 @@ body:has(.map-setting-overlay:not([hidden])) .group-reference-menu { z-index: 12
   .map-setting-dialog .zone-map__toolbar > div { flex-wrap: wrap; }
   .map-setting-dialog .zone-map__inspector-section { padding: 10px; }
   .map-setting-dialog .zone-map__field-grid { gap: 6px; }
+  .map-setting-dialog--previews .map-setting-dialog__body { grid-template-columns: minmax(0, 1fr); grid-template-rows: 146px minmax(0, 1fr); gap: 10px; }
+  .map-setting-dialog--previews .zone-map__layout { grid-template-columns: minmax(0, 1fr) 148px; }
 }

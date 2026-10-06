@@ -18,6 +18,11 @@ const versions = [
     code: 'V3',
     label: 'Map Setting Dialog',
   },
+  {
+    value: 'previews',
+    code: 'V4',
+    label: 'Group Previews',
+  },
 ]
 
 export default function DesignVersionSwitcher({ value, onChange, hidden = false }) {
