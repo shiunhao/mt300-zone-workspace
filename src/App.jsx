@@ -32,12 +32,6 @@ const detailTabTracks = {
   zone: { start: '56%', width: '44%' },
 }
 const designVersions = ['reference', 'shared', 'dialog', 'previews']
-const designVersionLabels = {
-  reference: 'V1 · Independent Group Maps',
-  shared: 'V2 · Zone Workspace',
-  dialog: 'V3 · Map Setting Dialog',
-  previews: 'V4 · Group Previews',
-}
 const initialConfigurations = Object.fromEntries(designVersions.map((version) => [version,
   Object.fromEntries(initialGroups.map((group) => [group.id, {
     pickupMode: 'Talker Position',
@@ -111,11 +105,6 @@ export default function App() {
     if (version !== designVersion) setChannelSearch('')
   }
 
-  const returnToDesign = () => {
-    setShowFeedback(false)
-    requestAnimationFrame(() => document.querySelector('.design-version-trigger')?.focus())
-  }
-
   const openConfigure = () => {
     setConfigureOpen(true)
   }
@@ -163,9 +152,9 @@ export default function App() {
   }
 
   return (
-    <div className={`settings-shell design-${designVersion}`}>
+    <div className={`settings-shell design-${designVersion}${showFeedback ? ' is-feedback-page' : ''}`}>
       <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={usesMapDialog && mapSettingOpen} />
-      <aside className="sidebar" aria-label="Main navigation">
+      <aside className="sidebar" aria-label="Main navigation" hidden={showFeedback}>
         <div className="product-name"><Icon name="device" size={26} /><span>MT300</span></div>
         <nav>
           {sections.map((section) => (
@@ -177,7 +166,7 @@ export default function App() {
       </aside>
 
       <main className="settings-main">
-        <header className="page-toolbar">
+        <header className="page-toolbar" hidden={showFeedback}>
           <SelectField label="Profile" value="Profile 1" className="profile-select" />
           <div className="page-actions">
             <button className="icon-button" type="button" aria-label="Help" title="Help"><Icon name="help" size={24} /></button>
@@ -185,12 +174,12 @@ export default function App() {
           </div>
         </header>
 
-        <div className="mode-tabs" role="tablist" aria-label="Mode settings">
+        <div className="mode-tabs" role="tablist" aria-label="Mode settings" hidden={showFeedback}>
           <button className="mode-tab is-active" id="auto-tab" type="button" role="tab" aria-selected="true" aria-controls="auto-settings">Auto Mode Settings</button>
           <button className="mode-tab" type="button" role="tab" aria-selected="false" tabIndex={-1}>Manual Mode Settings</button>
         </div>
 
-        <UserFeedbackPage active={showFeedback} onBack={returnToDesign} returnLabel={designVersionLabels[designVersion]} />
+        <UserFeedbackPage active={showFeedback} />
 
         <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback}>
           <MicrophoneWorkspace

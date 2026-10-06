@@ -30,7 +30,7 @@ const painPoints = [
   },
 ]
 
-export default function UserFeedbackPage({ onBack, returnLabel = '設計頁面', active = true }) {
+export default function UserFeedbackPage({ active = true }) {
   return (
     <section className="user-feedback-page" hidden={!active} aria-labelledby="user-feedback-title" lang="zh-Hant">
       <header className="user-feedback-page__header">
@@ -38,11 +38,6 @@ export default function UserFeedbackPage({ onBack, returnLabel = '設計頁面',
           <p className="user-feedback-page__eyebrow">設計討論參考</p>
           <h1 id="user-feedback-title">使用者回饋與痛點</h1>
         </div>
-        {onBack && (
-          <button className="user-feedback-page__back" type="button" onClick={onBack}>
-            <span aria-hidden="true">←</span> 返回 {returnLabel}
-          </button>
-        )}
       </header>
 
       <div className="user-feedback-page__source">

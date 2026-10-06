@@ -41,6 +41,11 @@ export default function DesignVersionSwitcher({ value, onChange, hidden = false 
   const selected = versions[selectedIndex]
 
   useLayoutEffect(() => {
+    if (value === 'feedback') {
+      setTop(24)
+      return undefined
+    }
+
     const toolbar = document.querySelector('.page-toolbar')
     if (!toolbar) return undefined
 
@@ -56,7 +61,7 @@ export default function DesignVersionSwitcher({ value, onChange, hidden = false 
       observer.disconnect()
       window.removeEventListener('resize', positionBelowToolbar)
     }
-  }, [])
+  }, [value])
 
   useEffect(() => {
     if (hidden) setOpen(false)

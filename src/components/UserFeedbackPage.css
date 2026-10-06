@@ -37,23 +37,6 @@
   line-height: 1.4;
 }
 
-.user-feedback-page__back {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 5px 12px;
-  border: 1px solid var(--line-2);
-  border-radius: 4px;
-  background: var(--panel-2);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.user-feedback-page__back:hover { border-color: var(--blue); background: #293440; }
-
 .user-feedback-page__source {
   flex-shrink: 0;
   padding: 11px 14px;
@@ -160,7 +143,6 @@
   .user-feedback-page { padding: 12px; }
   .user-feedback-page__header { flex-wrap: wrap; }
   .user-feedback-page h1 { font-size: 21px; }
-  .user-feedback-page__back { max-width: 100%; }
   .user-feedback-page__source { padding: 10px; }
   .user-feedback-page__panel-heading, .user-feedback-page__scroll { padding: 12px; }
   .user-feedback-page__scope th { width: 80px; }
