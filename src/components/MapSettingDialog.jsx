@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom';
 import Icon from './Icon';
 import ZoneMapPanel from './ZoneMapPanel';
 import GroupZonePreviews from './GroupZonePreviews';
-import { createWorkspaceMaps } from './workspaceGeometry';
+import { createWorkspaceMaps, getMicrophoneGroups, WORKSPACE_MICROPHONE } from './workspaceGeometry';
 import { useDialogFocus } from './ChannelConfigureDialog';
 import './MapSettingDialog.css';
 
 export default function MapSettingDialog({
   open = false,
   variant = 'reference',
+  microphone = WORKSPACE_MICROPHONE,
   groups = [],
   initialGroupId = 'G2',
   entryPickupMode,
@@ -29,17 +30,19 @@ export default function MapSettingDialog({
   }, [open, initialGroupId]);
   useDialogFocus(open, dialogRef, onClose);
 
-  const selectedGroup = groups.find((group) => group.id === editingGroupId) || groups[0];
-  const groupId = selectedGroup?.id || initialGroupId;
+  const scopedGroups = hasPreviews ? getMicrophoneGroups(groups, microphone.id) : groups;
+  const selectedGroup = scopedGroups.find((group) => group.id === editingGroupId)
+    || scopedGroups.find((group) => group.id === initialGroupId) || scopedGroups[0];
+  const groupId = selectedGroup?.id || '';
   // The entry group may be using the still-open Channel Configure draft.
   // Switching groups never changes that draft or another group's Pickup Mode.
   const pickupMode = groupId === initialGroupId && entryPickupMode
     ? entryPickupMode : selectedGroup?.pickupMode || 'Talker Position';
   const talkerPosition = pickupMode === 'Talker Position';
-  const groupEnabled = selectedGroup?.enabled !== false;
-  const previewGroups = groups.map((group) => group.id === initialGroupId && entryPickupMode
+  const groupEnabled = Boolean(selectedGroup) && selectedGroup.enabled !== false;
+  const previewGroups = scopedGroups.map((group) => group.id === initialGroupId && entryPickupMode
     ? { ...group, pickupMode: entryPickupMode } : group);
-  const status = !talkerPosition
+  const status = selectedGroup && !talkerPosition
     ? `${groupId} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
     : '';
 
@@ -63,7 +66,15 @@ export default function MapSettingDialog({
         data-modal-level="1200"
       >
         <header className="map-setting-dialog__header">
-          <h2 id={titleId}>Zone Map</h2>
+          {hasPreviews ? <div className="map-setting-dialog__microphone" aria-label={`Microphone ${microphone.id} ${microphone.model}`}>
+            <svg className="map-setting-dialog__microphone-icon" width="32" height="32" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="22" height="22" rx="2" fill="#7d919f" stroke="#cadce8" />
+              <rect x="7" y="7" width="14" height="14" rx="1" fill="#b2c6d2" stroke="#d8e6ee" />
+              <path d="M10 11h8M10 14h8M10 17h8" stroke="#728b9b" />
+              <path d="M20 4h4" stroke="#6ce3ab" strokeWidth="1.5" />
+            </svg>
+            <div><h2 id={titleId}>Zone Map · {microphone.id}</h2><p>{microphone.model}</p></div>
+          </div> : <h2 id={titleId}>Zone Map</h2>}
           {!hasPreviews && <div className="map-setting-dialog__group-controls">
             <label htmlFor={groupSelectId}>Group</label>
             <div className="select-field map-setting-dialog__group-select">
@@ -109,16 +120,18 @@ export default function MapSettingDialog({
           />}
           <div className="map-setting-dialog__editor">
             {status && <p className="map-setting-dialog__status" id={statusId} role="status">{status}</p>}
-            <ZoneMapPanel
+            {selectedGroup ? <ZoneMapPanel
               variant="reference"
               groupId={groupId}
-              groups={groups}
+              groups={scopedGroups}
+              microphone={microphone}
+              showGroupContext={hasPreviews}
               enabled={groupEnabled && talkerPosition}
               active={open}
               maps={hasPreviews ? previewMaps : undefined}
               onMapsChange={hasPreviews ? setPreviewMaps : undefined}
               showReferences={!hasPreviews}
-            />
+            /> : <p className="map-setting-dialog__empty">No camera groups connected to {microphone.id}.</p>}
           </div>
         </div>
       </section>

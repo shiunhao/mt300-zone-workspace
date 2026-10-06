@@ -43,7 +43,7 @@ function PreviewMap({ group, zones, view }) {
 }
 
 export default function GroupZonePreviews({ groups, currentGroupId, initialGroupId = currentGroupId, maps, active, onSelectGroup, onToggleGroup }) {
-  const view = previewView(maps);
+  const view = previewView(Object.fromEntries(groups.map((group) => [group.id, maps[group.id] || []])));
   return <aside className="group-zone-previews" aria-label="Group previews">
     <div className="group-zone-previews__list">
       {groups.map((group) => {

@@ -40,6 +40,10 @@
   font-weight: 600;
   line-height: 24px;
 }
+.map-setting-dialog__microphone { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; }
+.map-setting-dialog__microphone-icon { flex-shrink: 0; padding: 4px; box-sizing: content-box; border: 1px solid #35566d; border-radius: 6px; background: #203442; }
+.map-setting-dialog__microphone p { margin: 2px 0 0; color: var(--dim); font-size: 12px; line-height: 18px; }
+.map-setting-dialog__empty { margin: auto; color: var(--dim); font-size: 13px; }
 .map-setting-dialog__group-controls {
   display: flex;
   align-items: center;

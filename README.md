@@ -36,7 +36,7 @@ npm run build
 - V2 的 Back to Channel 返回所選 Group，Map Setting 捷徑也可開啟 Zone Workspace；切換保留地圖資料、視角與其他圖層顯示選擇。
 - V3 沿用原設計流程：Channel Configure → Talker Position → Map Setting → Zone Map 視窗。視窗上方可切換 Group 與啟用狀態，當前組可直接編輯，其他組可作為彩色虛線參照；保留新增、刪除、四角縮放、手動座標與尺寸、重疊排斥、51 × 51 格平移與 25%～150% 縮放。各組與各方案的地圖資料獨立，關閉或切換後仍保留本次頁面的資料。
 - V3 關閉地圖視窗後回到原本的 Channel Configure，保留尚未儲存的 Pickup Mode；在草稿中選 Talker Position 即可開啟 Map Setting，不會自動儲存模式。切換視窗內 Group 不改變原本 Configure 的 Group；其他組仍受已儲存的 Pickup Mode 與停用狀態限制。
-- V4 Group Previews 從 Channel Configure 旁的 Zone Map 按鈕直接進入，Channel Configure 內仍保留 Map Setting 捷徑。直接開啟使用當前 Group 已儲存的 Pickup Mode，非 Talker Position 的 Group 地圖維持反灰。左側將所有 Groups 各自顯示為一張唯讀縮圖，中間主圖只編輯目前 Group，右側保留 Zone settings。點縮圖切換編輯組，目前組以藍色框線標示，各卡片提供獨立啟用開關；上方只有 Zone Map 與關閉按鈕，移除 Group 下拉選單、啟用開關及縮圖區小標題。左側獨立捲動，小螢幕改為橫向縮圖列。各縮圖採用相同原點與比例，包含麥克風、Zone 編號及各組固定顏色，停用組反灰。已提交的新增、刪除、位置與尺寸變更同步反映在縮圖中，V4 地圖資料與其他方案獨立保存。
+- V4 Group Previews 從 Channel Configure 旁的 Zone Map 按鈕直接進入，Channel Configure 內仍保留 Map Setting 捷徑。開啟對象為來源 Group 搭配的麥克風，頂部固定顯示麥克風 ID 與型號；左側依 microphoneId 只列出同一台麥克風搭配的攝影機 Groups，預選來源 Group。點縮圖切換編輯組，主圖工具列標示當前 Group 與攝影機，右側保留 Zone settings；各組保留自己的 Zone 範圍。直接開啟使用來源 Group 已儲存的 Pickup Mode，非 Talker Position 的 Group 地圖維持反灰。各卡片提供獨立啟用開關，停用一組只停用該組主圖，其他縮圖仍可切換；移除 Group 下拉選單、頂部啟用開關及縮圖區小標題。左側獨立捲動，小螢幕改為橫向縮圖列。各縮圖以該麥克風的 Groups 計算相同原點與比例，包含麥克風、Zone 編號及各組固定顏色，停用組反灰。已提交的新增、刪除、位置與尺寸變更同步反映在縮圖中，關閉重開仍保留資料，V4 地圖資料與其他方案獨立保存。目前示範中的 G1、G2、G3 都搭配 MIC-01。
 - 新版支援 Zone 新增、選取、刪除、拖曳、四角尺寸調整，以及 X／Y／Width／Height 手動輸入。四角把手拖曳時固定對角，尺寸與座標欄位同步更新。選取狀態以加粗亮色框線與較深填色呈現，點擊地圖空白處解除選取。
 - 每個當前 Group 的 Zone 中心以虛線連接 mic，拖曳、調整尺寸或輸入數值時同步更新。
 - 桌面版三個分頁共用可用畫面高度；Zone Map 背景容器內整合麥克風型號、Add Zone、Remove Zone 與 View Other Groups’ Zones 下拉選單，右側設定面板分開。麥克風 ID 標題、Map 狀態 Badge、Reference groups 標題、底部圖例與展示文字已移除。

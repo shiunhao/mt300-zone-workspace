@@ -1,5 +1,9 @@
 export const WORKSPACE_MICROPHONE = { id: 'MIC-01', model: 'Shure MXA925-S' };
 
+export function getMicrophoneGroups(groups, microphoneId) {
+  return microphoneId ? groups.filter((group) => group.microphoneId === microphoneId) : [];
+}
+
 const INITIAL_MAPS = {
   G1: [
     { id: 'zone-1', name: 'Zone 1', x: -2.5, y: 1.25, width: 3, height: 2 },
