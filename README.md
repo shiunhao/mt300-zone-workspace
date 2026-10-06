@@ -24,11 +24,12 @@ npm run build
 - Channel 顯示 8 列 Microphone／Camera／Human tracking／Remarks；可選 Preset、編輯備註、搜尋。
 - Profile、Output Layout、Position view 保留截圖中的選項。
 - Channel Configure 提供 Lobe／Coverage／Talker Position 與對應欄位，Map Setting 依版本進入分頁、工作區或設定視窗。
-- 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V2 Zone Workspace、V3 Map Setting Dialog、V4 Group Previews；V3／V4 Zone Map 視窗開啟時隱藏選單，關閉後恢復。V0 原版已移除。
-- 預覽初始進入 V4 Channel，只有 Channel／Active Position 兩個子分頁。V2／V4 的按鈕依序為 Channel Configure、Zone Map、Time；V2 開啟 Zone Workspace，V4 直接開啟 Group Previews 設定視窗，關閉後回到 Channel 並保留地圖設定。V3 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V1 保留 Zone Map 子分頁。
+- 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V2 Zone Workspace、V3 Map Setting Dialog、V4 Group Previews、V5 Microphone Setup；V3／V4／V5 Zone Map 視窗開啟時隱藏選單，關閉後恢復。V0 原版已移除。
+- 預覽初始進入 V5 的 Microphones 清單，點麥克風卡片直接開啟該設備的 Zone 設定。V2／V3／V4 保留 Channel／Active Position 兩個子分頁。V2／V4 的按鈕依序為 Channel Configure、Zone Map、Time；V2 開啟 Zone Workspace，V4 直接開啟 Group Previews 設定視窗，關閉後回到 Channel 並保留地圖設定。V3 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V1 保留 Zone Map 子分頁。
 - 版本選單沿用 S311／TR615 的緊湊選單形式，位於 Help／X 下方，不占用原有按鈕的位置。
 - 同一個下拉選單可切換「使用者回饋與痛點」討論頁，列出 AVtech Media／Nathan 測試 MT500 V22 的完整英文原文、中文翻譯、痛點整理，以及客戶全域設定要求與 Jira 跨 Group 參照方案的差異。返回設計時保留目前版本、Group、分頁、搜尋及本次頁面的地圖設定。
-- 回饋頁以獨立置中內容區呈現，隱藏產品導覽、Profile、模式分頁與 Help／Close，也不顯示返回按鈕；右上角保留下拉選單，直接切換回 V1～V4。
+- 回饋頁以獨立置中內容區呈現，隱藏產品導覽、Profile、模式分頁與 Help／Close，也不顯示返回按鈕；右上角保留下拉選單，直接切換回 V1～V5。
+- V5 Microphone Setup 以麥克風為主要入口，Auto Mode Settings 直接呈現麥克風卡片，顯示 ID、型號及搭配的攝影機 Groups。點卡片立即開啟該麥克風的 Zone Map，左側僅顯示其攝影機 Group 縮圖；初次進入預選第一個啟用且使用 Talker Position 的 Group，之後記住每台麥克風最後選取的 Group，包含停用組。關閉回到麥克風清單並恢復卡片焦點，保留各 Group 的獨立地圖設定；切換麥克風、版本及回饋頁也保留資料。V5 的地圖與開關獨立於 V1～V4。V5 專用示範資料包含 MIC-01（G1～G3）與 MIC-02（G4、G5），均為 Shure MXA925-S；第二台設備與配對資料僅用於比較選擇流程，未連線到實際設備。
 - V1：每個 Group 獨立編輯，其他 Group 的同 mic zones 作為只讀虛線參照。
 - V2：以 MIC-01 為中心的 Zone Workspace，左側 Group 圖層清單、中間多 Group 地圖與右側 Zone 設定。從 Channel 進入時為唯讀 Overview，顯示當前 Group 的圖層；明確按 Edit 才編輯所選 Group，其他 Groups 維持唯讀。圖層使用各組固定顏色，當前編輯組為藍色。
 - V2 圖層使用眼睛按鈕顯示／隱藏，開眼表示顯示、劃線眼表示隱藏。圖層顯示與 Group 啟用開關分開操作；複製目標仍使用 Checkbox。

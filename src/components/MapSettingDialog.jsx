@@ -14,6 +14,8 @@ export default function MapSettingDialog({
   groups = [],
   initialGroupId = 'G2',
   entryPickupMode,
+  initialMaps,
+  onEditingGroupChange,
   onToggleGroup,
   onClose,
 }) {
@@ -22,7 +24,9 @@ export default function MapSettingDialog({
   const statusId = useId();
   const dialogRef = useRef(null);
   const [editingGroupId, setEditingGroupId] = useState(initialGroupId);
-  const [previewMaps, setPreviewMaps] = useState(() => createWorkspaceMaps(groups));
+  const [previewMaps, setPreviewMaps] = useState(() => initialMaps
+    ? Object.fromEntries(Object.entries(initialMaps).map(([id, zones]) => [id, zones.map((zone) => ({ ...zone }))]))
+    : createWorkspaceMaps(groups));
   const hasPreviews = variant === 'previews';
 
   useEffect(() => {
@@ -115,7 +119,10 @@ export default function MapSettingDialog({
             initialGroupId={initialGroupId}
             maps={previewMaps}
             active={open}
-            onSelectGroup={setEditingGroupId}
+            onSelectGroup={(id) => {
+              setEditingGroupId(id);
+              onEditingGroupChange?.(id);
+            }}
             onToggleGroup={onToggleGroup}
           />}
           <div className="map-setting-dialog__editor">

@@ -24,6 +24,11 @@ const versions = [
     label: 'Group Previews',
   },
   {
+    value: 'microphones',
+    code: 'V5',
+    label: 'Microphone Setup',
+  },
+  {
     value: 'feedback',
     label: '使用者回饋與痛點',
   },

@@ -142,7 +142,10 @@ export default function ZoneMapPanel({
   const isOverview = isWorkspace && overview;
   const isInteractive = enabled && active;
   const [groupMaps, setGroupMaps] = useState(() => Object.fromEntries(Object.entries(INITIAL_GROUPS).map(([id, zones]) => [id, copyZones(zones)])));
-  const [selection, setSelection] = useState({ G1: 'zone-1', G2: 'zone-1', G3: 'zone-1' });
+  const [selection, setSelection] = useState(() => Object.fromEntries(
+    (groups.length ? groups.map((group) => group.id) : Object.keys(INITIAL_GROUPS))
+      .map((id) => [id, 'zone-1']),
+  ));
   const [references, setReferences] = useState({ G1: false, G2: false, G3: false });
   const { mapRef, zoom, reset, zoomIn, zoomOut } = useMapZoom({ enabled: isInteractive, maxZoom: 150 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -168,7 +171,9 @@ export default function ZoneMapPanel({
   const editable = isInteractive && canEdit;
   const activePreview = dragPreview?.context === mapContext ? dragPreview : null;
   const displayZones = activePreview ? currentZones.map((zone) => zone.id === activePreview.zone.id ? activePreview.zone : zone) : currentZones;
-  const selectedZone = displayZones.find((zone) => zone.id === (isWorkspace ? selectedZoneId : selection[selectionKey])) || null;
+  const currentSelectionId = Object.prototype.hasOwnProperty.call(selection, selectionKey)
+    ? selection[selectionKey] : currentZones[0]?.id;
+  const selectedZone = displayZones.find((zone) => zone.id === (isWorkspace ? selectedZoneId : currentSelectionId)) || null;
   const hasVisibleZones = isOverview ? visibleGroups.some((group) => availableMaps[group.id]?.length) : currentZones.length > 0;
   const viewWidth = BASE_VIEW_WIDTH * 100 / zoom;
   const viewHeight = BASE_VIEW_HEIGHT * 100 / zoom;
