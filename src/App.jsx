@@ -145,7 +145,7 @@ export default function App() {
 
   return (
     <div className={`settings-shell design-${designVersion}`}>
-      <DesignVersionSwitcher value={designVersion} onChange={switchDesignVersion} />
+      <DesignVersionSwitcher value={designVersion} onChange={switchDesignVersion} hidden={designVersion === 'dialog' && mapSettingOpen} />
       <aside className="sidebar" aria-label="Main navigation">
         <div className="product-name"><Icon name="device" size={26} /><span>MT300</span></div>
         <nav>

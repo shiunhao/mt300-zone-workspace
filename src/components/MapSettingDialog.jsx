@@ -34,7 +34,7 @@ export default function MapSettingDialog({
   const groupEnabled = selectedGroup?.enabled !== false;
   const status = !talkerPosition
     ? `${groupId} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
-    : !groupEnabled ? `${groupId} is disabled.` : '';
+    : '';
 
   return createPortal(
     <div

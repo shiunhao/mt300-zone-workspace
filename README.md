@@ -24,7 +24,7 @@ npm run build
 - Channel 顯示 8 列 Microphone／Camera／Human tracking／Remarks；可選 Preset、編輯備註、搜尋。
 - Profile、Output Layout、Position view 保留截圖中的選項。
 - Channel Configure 提供 Lobe／Coverage／Talker Position 與對應欄位，Map Setting 依版本進入分頁、工作區或設定視窗。
-- 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V2 Zone Workspace、V3 Map Setting Dialog，層級高於所有設定視窗；V0 原版已移除。
+- 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V2 Zone Workspace、V3 Map Setting Dialog；V3 Zone Map 視窗開啟時隱藏選單，關閉後恢復。V0 原版已移除。
 - 預覽初始進入 V3 Channel，只有 Channel／Active Position 兩個子分頁，Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V2 的按鈕依序為 Channel Configure、Zone Map、Time；Zone Map 進入 Zone Workspace，Back to Channel 返回並保留地圖設定。V1 保留 Zone Map 子分頁。
 - 版本選單沿用 S311／TR615 的緊湊選單形式，位於 Help／X 下方，不占用原有按鈕的位置。
 - V1：每個 Group 獨立編輯，其他 Group 的同 mic zones 作為只讀虛線參照。

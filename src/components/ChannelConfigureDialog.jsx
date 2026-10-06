@@ -34,7 +34,7 @@ export function useDialogFocus(open, dialogRef, onClose) {
     initial.focus();
 
     const handleKey = (event) => {
-      // The prototype version menu stays available above every modal.
+      // The prototype version menu participates only while it is visible.
       const inVersionSwitcher = event.target instanceof Element && event.target.closest('.design-version-switcher');
       if (inVersionSwitcher && (event.key !== 'Tab' || document.querySelector('.design-version-menu'))) return;
       const visibleDialogs = [...document.querySelectorAll('[data-mt-dialog]')]
@@ -51,7 +51,9 @@ export function useDialogFocus(open, dialogRef, onClose) {
       }
       if (event.key === 'Tab') {
         const versionTrigger = document.querySelector('.design-version-trigger');
-        const targets = [...focusable(), ...(versionTrigger ? [versionTrigger] : [])];
+        const versionVisible = versionTrigger?.getClientRects().length > 0
+          && !versionTrigger.closest('[inert], [aria-hidden="true"]');
+        const targets = [...focusable(), ...(versionVisible ? [versionTrigger] : [])];
         event.preventDefault();
         if (targets.length === 0) dialog.focus();
         else {

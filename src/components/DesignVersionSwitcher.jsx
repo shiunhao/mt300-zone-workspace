@@ -20,7 +20,7 @@ const versions = [
   },
 ]
 
-export default function DesignVersionSwitcher({ value, onChange }) {
+export default function DesignVersionSwitcher({ value, onChange, hidden = false }) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [top, setTop] = useState(null)
@@ -37,26 +37,24 @@ export default function DesignVersionSwitcher({ value, onChange }) {
 
     // Keep the floating selector beneath the real Help / Close toolbar row.
     const positionBelowToolbar = () => {
-      const modalHeader = document.querySelector('.map-setting-overlay:not([hidden]) .map-setting-dialog__header')
-      const toolbarBottom = toolbar.getBoundingClientRect().bottom + 4
-      const modalBottom = modalHeader?.getClientRects().length ? modalHeader.getBoundingClientRect().bottom + 8 : 0
-      setTop(Math.round(Math.max(toolbarBottom, modalBottom) + window.scrollY))
+      setTop(Math.round(toolbar.getBoundingClientRect().bottom + 4 + window.scrollY))
     }
     positionBelowToolbar()
     const observer = new ResizeObserver(positionBelowToolbar)
     observer.observe(toolbar)
-    const visibilityObserver = new MutationObserver(positionBelowToolbar)
-    visibilityObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] })
     window.addEventListener('resize', positionBelowToolbar)
     return () => {
       observer.disconnect()
-      visibilityObserver.disconnect()
       window.removeEventListener('resize', positionBelowToolbar)
     }
   }, [])
 
   useEffect(() => {
-    if (!open) return undefined
+    if (hidden) setOpen(false)
+  }, [hidden])
+
+  useEffect(() => {
+    if (!open || hidden) return undefined
 
     const handleOutside = (event) => {
       if (!rootRef.current?.contains(event.target)) setOpen(false)
@@ -76,11 +74,11 @@ export default function DesignVersionSwitcher({ value, onChange }) {
       document.removeEventListener('pointerdown', handleOutside)
       document.removeEventListener('keydown', handleEscape, true)
     }
-  }, [open])
+  }, [open, hidden])
 
   useEffect(() => {
-    if (open) optionRefs.current[activeIndex]?.focus()
-  }, [open, activeIndex])
+    if (open && !hidden) optionRefs.current[activeIndex]?.focus()
+  }, [open, activeIndex, hidden])
 
   const openMenu = (index = selectedIndex) => {
     setActiveIndex(index)
@@ -110,6 +108,7 @@ export default function DesignVersionSwitcher({ value, onChange }) {
     <div
       ref={rootRef}
       className="design-version-switcher"
+      hidden={hidden}
       style={top === null ? undefined : { '--design-switcher-top': `${top}px` }}
       title="Switch prototype version"
       onBlur={(event) => {
@@ -137,7 +136,7 @@ export default function DesignVersionSwitcher({ value, onChange }) {
         <span className="design-version-chevron" aria-hidden="true">▼</span>
       </button>
 
-      {open && (
+      {open && !hidden && (
         <div
           id={`${id}-menu`}
           className="design-version-menu"

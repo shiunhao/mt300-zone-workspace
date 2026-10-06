@@ -9,6 +9,8 @@
   color: var(--text, #e8eaec);
 }
 
+.design-version-switcher[hidden] { display: none; }
+
 .design-version-trigger {
   display: flex;
   align-items: center;
