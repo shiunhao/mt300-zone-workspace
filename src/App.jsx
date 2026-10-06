@@ -6,6 +6,7 @@ import ZoneMapPanel from './components/ZoneMapPanel.jsx'
 import MicrophoneWorkspace from './components/MicrophoneWorkspace.jsx'
 import DesignVersionSwitcher from './components/DesignVersionSwitcher.jsx'
 import ChannelConfigureDialog from './components/ChannelConfigureDialog.jsx'
+import MapSettingDialog from './components/MapSettingDialog.jsx'
 
 const sections = [
   { label: 'Device', icon: 'device' },
@@ -29,7 +30,7 @@ const detailTabTracks = {
   position: { start: '28%', width: '28%' },
   zone: { start: '56%', width: '44%' },
 }
-const designVersions = ['reference', 'shared']
+const designVersions = ['reference', 'shared', 'dialog']
 const initialConfigurations = Object.fromEntries(designVersions.map((version) => [version,
   Object.fromEntries(initialGroups.map((group) => [group.id, {
     pickupMode: 'Talker Position',
@@ -73,10 +74,12 @@ function GroupItem({ group, selected, onSelect, onToggle }) {
 export default function App() {
   const [groups, setGroups] = useState(initialGroups)
   const [selectedGroupId, setSelectedGroupId] = useState('G2')
-  const [designVersion, setDesignVersion] = useState('shared')
-  const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel' })
+  const [designVersion, setDesignVersion] = useState('dialog')
+  const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel', dialog: 'channel' })
   const [configurations, setConfigurations] = useState(initialConfigurations)
   const [configureOpen, setConfigureOpen] = useState(false)
+  const [mapSettingOpen, setMapSettingOpen] = useState(false)
+  const [mapEntryMode, setMapEntryMode] = useState('Talker Position')
   const [channelSearch, setChannelSearch] = useState('')
   const selectedGroup = groups.find((group) => group.id === selectedGroupId)
   const detailRoute = detailTabsByVersion[designVersion]
@@ -88,6 +91,7 @@ export default function App() {
   const setSelectedDetailTab = (tab) => setDetailTabsByVersion((current) => ({ ...current, [designVersion]: tab }))
 
   const switchDesignVersion = (version) => {
+    setMapSettingOpen(false)
     setConfigureOpen(false)
     setDesignVersion(version)
     setChannelSearch('')
@@ -105,7 +109,13 @@ export default function App() {
     setConfigureOpen(false)
   }
 
-  const openMapSetting = () => {
+  const openMapSetting = (draft) => {
+    if (designVersion === 'dialog') {
+      if (draft?.pickupMode !== 'Talker Position') return
+      setMapEntryMode(draft.pickupMode)
+      setMapSettingOpen(true)
+      return
+    }
     setConfigureOpen(false)
     setSelectedDetailTab('zone')
     if (designVersion === 'shared') requestAnimationFrame(() => document.querySelector('.microphone-workspace:not([hidden]) .microphone-workspace__header button')?.focus())
@@ -238,7 +248,8 @@ export default function App() {
           </section>
         </section>
       </main>
-      <ChannelConfigureDialog open={configureOpen} groupId={selectedGroup.id} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab mapTargetLabel={designVersion === 'shared' ? 'Zone Workspace' : 'Zone Map tab'} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
+      <ChannelConfigureDialog open={configureOpen} suspended={mapSettingOpen} groupId={selectedGroup.id} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={designVersion !== 'dialog'} mapTargetLabel={designVersion === 'shared' ? 'Zone Workspace' : 'Zone Map tab'} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
+      <MapSettingDialog open={designVersion === 'dialog' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.dialog[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
     </div>
   )
 }

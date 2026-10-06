@@ -13,6 +13,11 @@ const versions = [
     code: 'V2',
     label: 'Zone Workspace',
   },
+  {
+    value: 'dialog',
+    code: 'V3',
+    label: 'Map Setting Dialog',
+  },
 ]
 
 export default function DesignVersionSwitcher({ value, onChange }) {
@@ -32,14 +37,20 @@ export default function DesignVersionSwitcher({ value, onChange }) {
 
     // Keep the floating selector beneath the real Help / Close toolbar row.
     const positionBelowToolbar = () => {
-      setTop(Math.round(toolbar.getBoundingClientRect().bottom + window.scrollY + 4))
+      const modalHeader = document.querySelector('.map-setting-overlay:not([hidden]) .map-setting-dialog__header')
+      const toolbarBottom = toolbar.getBoundingClientRect().bottom + 4
+      const modalBottom = modalHeader?.getClientRects().length ? modalHeader.getBoundingClientRect().bottom + 8 : 0
+      setTop(Math.round(Math.max(toolbarBottom, modalBottom) + window.scrollY))
     }
     positionBelowToolbar()
     const observer = new ResizeObserver(positionBelowToolbar)
     observer.observe(toolbar)
+    const visibilityObserver = new MutationObserver(positionBelowToolbar)
+    visibilityObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] })
     window.addEventListener('resize', positionBelowToolbar)
     return () => {
       observer.disconnect()
+      visibilityObserver.disconnect()
       window.removeEventListener('resize', positionBelowToolbar)
     }
   }, [])

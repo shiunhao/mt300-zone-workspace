@@ -20,8 +20,16 @@ export function useDialogFocus(open, dialogRef, onClose) {
     openDialogs += 1;
 
     const dialog = dialogRef.current;
-    const focusable = () => [...dialog.querySelectorAll('button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex="0"]')]
-      .filter((element) => element.getClientRects().length > 0);
+    const focusSelector = 'button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex="0"]';
+    const focusable = () => {
+      const targets = [...dialog.querySelectorAll(focusSelector)];
+      // Reference options are portaled above the map dialog; keep them in its tab order.
+      for (const trigger of dialog.querySelectorAll('[aria-controls]')) {
+        const menu = document.getElementById(trigger.getAttribute('aria-controls'));
+        if (menu?.classList.contains('group-reference-menu')) targets.push(...menu.querySelectorAll(focusSelector));
+      }
+      return [...new Set(targets)].filter((element) => element.getClientRects().length > 0 && !element.closest('[inert], [aria-hidden="true"]'));
+    };
     const initial = dialog.querySelector('[data-initial-focus]') || focusable()[0] || dialog;
     initial.focus();
 
@@ -30,7 +38,7 @@ export function useDialogFocus(open, dialogRef, onClose) {
       const inVersionSwitcher = event.target instanceof Element && event.target.closest('.design-version-switcher');
       if (inVersionSwitcher && (event.key !== 'Tab' || document.querySelector('.design-version-menu'))) return;
       const visibleDialogs = [...document.querySelectorAll('[data-mt-dialog]')]
-        .filter((element) => element.getClientRects().length > 0);
+        .filter((element) => element.getClientRects().length > 0 && !element.closest('[inert], [aria-hidden="true"]'));
       const highest = visibleDialogs.reduce((top, element) => (
         !top || Number(element.dataset.modalLevel) >= Number(top.dataset.modalLevel) ? element : top
       ), null);
@@ -65,6 +73,7 @@ export function useDialogFocus(open, dialogRef, onClose) {
 
 export default function ChannelConfigureDialog({
   open,
+  suspended = false,
   groupId,
   initialMode = 'Lobe',
   initialChannelInformation = 'Talker Position',
@@ -93,12 +102,12 @@ export default function ChannelConfigureDialog({
 
   const draft = { pickupMode, channelInformation };
   return createPortal(
-    <div className="configure-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="configure-overlay" aria-hidden={suspended || undefined} inert={suspended ? '' : undefined} onMouseDown={(event) => { if (!suspended && event.target === event.currentTarget) onClose(); }}>
       <section
         className="configure-dialog"
         ref={dialogRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal={suspended ? undefined : 'true'}
         aria-labelledby={titleId}
         tabIndex={-1}
         data-mt-dialog
