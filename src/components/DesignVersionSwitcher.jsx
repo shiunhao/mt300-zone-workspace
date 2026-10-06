@@ -23,6 +23,10 @@ const versions = [
     code: 'V4',
     label: 'Group Previews',
   },
+  {
+    value: 'feedback',
+    label: '使用者回饋與痛點',
+  },
 ]
 
 export default function DesignVersionSwitcher({ value, onChange, hidden = false }) {
@@ -115,7 +119,7 @@ export default function DesignVersionSwitcher({ value, onChange, hidden = false 
       className="design-version-switcher"
       hidden={hidden}
       style={top === null ? undefined : { '--design-switcher-top': `${top}px` }}
-      title="Switch prototype version"
+      title="Switch design version or view user feedback"
       onBlur={(event) => {
         if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false)
       }}
@@ -125,7 +129,7 @@ export default function DesignVersionSwitcher({ value, onChange, hidden = false 
         id={`${id}-trigger`}
         type="button"
         className={`design-version-trigger${open ? ' is-open' : ''}`}
-        aria-label={`Design version: ${selected.code} ${selected.label}`}
+        aria-label={selected.code ? `Design version: ${selected.code} ${selected.label}` : `Page: ${selected.label}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? `${id}-menu` : undefined}
@@ -137,7 +141,7 @@ export default function DesignVersionSwitcher({ value, onChange, hidden = false 
         }}
       >
         <span className="design-version-dot" aria-hidden="true" />
-        <span className="design-version-label">{selected.code} — {selected.label}</span>
+        <span className="design-version-label">{selected.code ? `${selected.code} — ${selected.label}` : selected.label}</span>
         <span className="design-version-chevron" aria-hidden="true">▼</span>
       </button>
 
@@ -154,14 +158,14 @@ export default function DesignVersionSwitcher({ value, onChange, hidden = false 
               key={version.value}
               ref={(element) => { optionRefs.current[index] = element }}
               type="button"
-              className={`design-version-option${selected.value === version.value ? ' is-selected' : ''}`}
+              className={`design-version-option${selected.value === version.value ? ' is-selected' : ''}${version.value === 'feedback' ? ' is-feedback' : ''}`}
               role="menuitemradio"
               aria-checked={selected.value === version.value}
               tabIndex={index === activeIndex ? 0 : -1}
               onFocus={() => setActiveIndex(index)}
               onClick={() => selectVersion(version)}
             >
-              {version.code} — {version.label}
+              {version.code ? `${version.code} — ${version.label}` : version.label}
             </button>
           ))}
         </div>

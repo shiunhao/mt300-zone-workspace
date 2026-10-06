@@ -89,6 +89,12 @@
   cursor: pointer;
 }
 .design-version-option:hover { background: rgba(255, 255, 255, .06); color: var(--text, #e8eaec); }
+.design-version-option.is-feedback {
+  margin-top: 4px;
+  border-top: 1px solid var(--line-2, #3a4048);
+  border-radius: 0 0 4px 4px;
+  color: var(--text, #e8eaec);
+}
 .design-version-option.is-selected {
   background: rgba(30, 155, 240, .16);
   box-shadow: inset 2px 0 0 var(--blue, #1e9bf0);

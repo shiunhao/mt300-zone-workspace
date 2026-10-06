@@ -60,6 +60,7 @@ svg { flex-shrink: 0; }
 .mode-tab.is-active { color: var(--blue); box-shadow: inset 0 -3px 0 var(--blue); }
 .workspace { display: grid; grid-template-columns: 264px minmax(0, 1fr); min-height: calc(100svh - 188px); margin-top: 16px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
 .workspace > [hidden] { display: none !important; }
+.workspace[hidden] { display: none !important; }
 .workspace.is-microphone-workspace { grid-template-columns: minmax(0, 1fr); }
 .group-panel { background: var(--panel-2); border-right: 1px solid var(--line-2); }
 .output-layout { padding: 24px 16px; border-bottom: 1px solid var(--line-2); }

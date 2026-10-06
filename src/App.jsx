@@ -7,6 +7,7 @@ import MicrophoneWorkspace from './components/MicrophoneWorkspace.jsx'
 import DesignVersionSwitcher from './components/DesignVersionSwitcher.jsx'
 import ChannelConfigureDialog from './components/ChannelConfigureDialog.jsx'
 import MapSettingDialog from './components/MapSettingDialog.jsx'
+import UserFeedbackPage from './components/UserFeedbackPage.jsx'
 
 const sections = [
   { label: 'Device', icon: 'device' },
@@ -31,6 +32,12 @@ const detailTabTracks = {
   zone: { start: '56%', width: '44%' },
 }
 const designVersions = ['reference', 'shared', 'dialog', 'previews']
+const designVersionLabels = {
+  reference: 'V1 · Independent Group Maps',
+  shared: 'V2 · Zone Workspace',
+  dialog: 'V3 · Map Setting Dialog',
+  previews: 'V4 · Group Previews',
+}
 const initialConfigurations = Object.fromEntries(designVersions.map((version) => [version,
   Object.fromEntries(initialGroups.map((group) => [group.id, {
     pickupMode: 'Talker Position',
@@ -75,6 +82,7 @@ export default function App() {
   const [groups, setGroups] = useState(initialGroups)
   const [selectedGroupId, setSelectedGroupId] = useState('G2')
   const [designVersion, setDesignVersion] = useState('previews')
+  const [showFeedback, setShowFeedback] = useState(false)
   const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel', dialog: 'channel', previews: 'channel' })
   const [configurations, setConfigurations] = useState(initialConfigurations)
   const [configureOpen, setConfigureOpen] = useState(false)
@@ -94,8 +102,18 @@ export default function App() {
   const switchDesignVersion = (version) => {
     setMapSettingOpen(false)
     setConfigureOpen(false)
+    if (version === 'feedback') {
+      setShowFeedback(true)
+      return
+    }
+    setShowFeedback(false)
     setDesignVersion(version)
-    setChannelSearch('')
+    if (version !== designVersion) setChannelSearch('')
+  }
+
+  const returnToDesign = () => {
+    setShowFeedback(false)
+    requestAnimationFrame(() => document.querySelector('.design-version-trigger')?.focus())
   }
 
   const openConfigure = () => {
@@ -146,7 +164,7 @@ export default function App() {
 
   return (
     <div className={`settings-shell design-${designVersion}`}>
-      <DesignVersionSwitcher value={designVersion} onChange={switchDesignVersion} hidden={usesMapDialog && mapSettingOpen} />
+      <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={usesMapDialog && mapSettingOpen} />
       <aside className="sidebar" aria-label="Main navigation">
         <div className="product-name"><Icon name="device" size={26} /><span>MT300</span></div>
         <nav>
@@ -172,7 +190,9 @@ export default function App() {
           <button className="mode-tab" type="button" role="tab" aria-selected="false" tabIndex={-1}>Manual Mode Settings</button>
         </div>
 
-        <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id="auto-settings" role="tabpanel" aria-labelledby="auto-tab">
+        <UserFeedbackPage active={showFeedback} onBack={returnToDesign} returnLabel={designVersionLabels[designVersion]} />
+
+        <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback}>
           <MicrophoneWorkspace
             groups={groups.map((group) => ({ ...group, pickupMode: configurations.shared[group.id].pickupMode }))}
             selectedGroupId={selectedGroupId}
@@ -243,7 +263,7 @@ export default function App() {
                 <button className="button" type="button" onClick={openConfigure}>Channel Configure</button>
               </div>}
               <div key="reference" hidden={designVersion !== 'reference' || configuration.pickupMode !== 'Talker Position'}>
-                <ZoneMapPanel variant="reference" groupId={selectedGroup.id} groups={groups} enabled={selectedGroup.enabled} active={selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
+                <ZoneMapPanel variant="reference" groupId={selectedGroup.id} groups={groups} enabled={selectedGroup.enabled} active={!showFeedback && selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
               </div>
             </div>
           </section>
