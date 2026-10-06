@@ -7,11 +7,11 @@ export const SETUP_MICROPHONES = [
 ];
 
 export const SETUP_GROUPS = [
-  { id: 'G1', microphoneId: 'MIC-01', camera: 'TR535N', enabled: false, pickupMode: 'Talker Position' },
-  { id: 'G2', microphoneId: 'MIC-01', camera: 'TR211', enabled: true, pickupMode: 'Talker Position' },
-  { id: 'G3', microphoneId: 'MIC-01', camera: 'TR313', enabled: true, pickupMode: 'Talker Position' },
-  { id: 'G4', microphoneId: 'MIC-02', camera: 'TR535N', enabled: true, pickupMode: 'Talker Position' },
-  { id: 'G5', microphoneId: 'MIC-02', camera: 'TR313', enabled: true, pickupMode: 'Talker Position' },
+  { id: 'G1', microphoneId: 'MIC-01', camera: 'TR535N', enabled: false, micIndicator: 'gray', pickupMode: 'Talker Position' },
+  { id: 'G2', microphoneId: 'MIC-01', camera: 'TR211', enabled: true, micIndicator: 'green', pickupMode: 'Talker Position' },
+  { id: 'G3', microphoneId: 'MIC-01', camera: 'TR313', enabled: true, micIndicator: 'green', pickupMode: 'Talker Position' },
+  { id: 'G4', microphoneId: 'MIC-02', camera: 'TR535N', enabled: true, micIndicator: 'green', pickupMode: 'Talker Position' },
+  { id: 'G5', microphoneId: 'MIC-02', camera: 'TR313', enabled: true, micIndicator: 'green', pickupMode: 'Talker Position' },
 ];
 
 export const SETUP_MAPS = {

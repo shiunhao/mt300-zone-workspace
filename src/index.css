@@ -62,6 +62,13 @@ svg { flex-shrink: 0; }
 .workspace > [hidden] { display: none !important; }
 .workspace[hidden] { display: none !important; }
 .workspace.is-microphone-workspace { grid-template-columns: minmax(0, 1fr); }
+.design-microphones .group-panel { display: flex; flex-direction: column; min-height: 0; }
+.design-microphones .output-layout { flex-shrink: 0; }
+.design-microphones .group-list-section { display: flex; flex: 1; flex-direction: column; min-height: 0; padding-top: 16px; }
+.design-microphones .group-list-heading { flex-shrink: 0; }
+.design-microphones .group-list { min-height: 0; overflow-y: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+.design-microphones .group-item { flex-shrink: 0; background: #252b32; }
+.design-microphones .group-item.is-selected { background: #293847; }
 .group-panel { background: var(--panel-2); border-right: 1px solid var(--line-2); }
 .output-layout { padding: 24px 16px; border-bottom: 1px solid var(--line-2); }
 .output-layout label { display: block; color: var(--dim); font-size: 14px; line-height: 20px; margin-bottom: 8px; }

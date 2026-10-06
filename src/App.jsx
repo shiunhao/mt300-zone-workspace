@@ -38,7 +38,7 @@ const detailTabTracks = {
 }
 const designVersions = ['reference', 'shared', 'dialog', 'previews', 'microphones']
 const initialConfigurations = Object.fromEntries(designVersions.map((version) => [version,
-  Object.fromEntries(initialGroups.map((group) => [group.id, {
+  Object.fromEntries((version === 'microphones' ? SETUP_GROUPS : initialGroups).map((group) => [group.id, {
     pickupMode: 'Talker Position',
     channelInformation: 'Talker Position',
   }])),
@@ -81,6 +81,7 @@ export default function App() {
   const [groups, setGroups] = useState(initialGroups)
   const [setupGroups, setSetupGroups] = useState(SETUP_GROUPS)
   const [selectedGroupId, setSelectedGroupId] = useState('G2')
+  const [selectedSetupGroupId, setSelectedSetupGroupId] = useState('G2')
   const [designVersion, setDesignVersion] = useState('microphones')
   const [showFeedback, setShowFeedback] = useState(false)
   const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel', dialog: 'channel', previews: 'channel', microphones: 'channel' })
@@ -88,18 +89,21 @@ export default function App() {
   const [configureOpen, setConfigureOpen] = useState(false)
   const [mapSettingOpen, setMapSettingOpen] = useState(false)
   const [setupMapOpen, setSetupMapOpen] = useState(false)
+  const [setupMapRequest, setSetupMapRequest] = useState(null)
   const [mapEntryMode, setMapEntryMode] = useState('Talker Position')
   const [mapEntryMicrophone, setMapEntryMicrophone] = useState(WORKSPACE_MICROPHONE)
   const [channelSearch, setChannelSearch] = useState('')
-  const selectedGroup = groups.find((group) => group.id === selectedGroupId)
+  const showMicrophoneSetup = designVersion === 'microphones'
+  const viewGroups = showMicrophoneSetup ? setupGroups : groups
+  const currentGroupId = showMicrophoneSetup ? selectedSetupGroupId : selectedGroupId
+  const selectedGroup = viewGroups.find((group) => group.id === currentGroupId)
   const detailRoute = detailTabsByVersion[designVersion]
   const selectedDetailTab = designVersion === 'shared' && detailRoute === 'zone' ? 'channel' : detailRoute
   const detailTabs = designVersion === 'reference' ? ['channel', 'position', 'zone'] : ['channel', 'position']
   const tabTrack = designVersion === 'reference' ? detailTabTracks[selectedDetailTab] : { start: selectedDetailTab === 'position' ? '50%' : '0%', width: '50%' }
-  const configuration = configurations[designVersion][selectedGroupId]
+  const configuration = configurations[designVersion][currentGroupId]
   const showZoneWorkspace = designVersion === 'shared' && detailRoute === 'zone'
-  const showMicrophoneSetup = designVersion === 'microphones'
-  const usesMapDialog = designVersion === 'dialog' || designVersion === 'previews'
+  const usesMapDialog = designVersion === 'dialog' || designVersion === 'previews' || showMicrophoneSetup
   const setSelectedDetailTab = (tab) => setDetailTabsByVersion((current) => ({ ...current, [designVersion]: tab }))
 
   const switchDesignVersion = (version) => {
@@ -121,12 +125,21 @@ export default function App() {
   const saveConfiguration = (nextConfiguration) => {
     setConfigurations((current) => ({
       ...current,
-      [designVersion]: { ...current[designVersion], [selectedGroupId]: nextConfiguration },
+      [designVersion]: { ...current[designVersion], [currentGroupId]: nextConfiguration },
     }))
     setConfigureOpen(false)
   }
 
   const openMapSetting = (draft) => {
+    if (showMicrophoneSetup) {
+      setSetupMapRequest((current) => ({
+        token: (current?.token || 0) + 1,
+        microphoneId: selectedGroup.microphoneId,
+        groupId: currentGroupId,
+        pickupMode: draft?.pickupMode ?? configuration.pickupMode,
+      }))
+      return
+    }
     if (usesMapDialog) {
       setMapEntryMode(draft?.pickupMode ?? configuration.pickupMode)
       setMapEntryMicrophone(microphones.find((microphone) => microphone.id === selectedGroup.microphoneId)
@@ -148,7 +161,8 @@ export default function App() {
   const toggleSetupGroup = (id) => setSetupGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group))
 
   const selectGroup = (id) => {
-    setSelectedGroupId(id)
+    if (showMicrophoneSetup) setSelectedSetupGroupId(id)
+    else setSelectedGroupId(id)
     setChannelSearch('')
   }
 
@@ -192,10 +206,7 @@ export default function App() {
 
         <UserFeedbackPage active={showFeedback} />
 
-        <MicrophoneSetup microphones={SETUP_MICROPHONES} groups={setupGroups} initialMaps={SETUP_MAPS}
-          active={showMicrophoneSetup && !showFeedback} onToggleGroup={toggleSetupGroup} onMapOpenChange={setSetupMapOpen} />
-
-        <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id={showMicrophoneSetup ? undefined : 'auto-settings'} role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback || showMicrophoneSetup}>
+        <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback}>
           <MicrophoneWorkspace
             groups={groups.map((group) => ({ ...group, pickupMode: configurations.shared[group.id].pickupMode }))}
             selectedGroupId={selectedGroupId}
@@ -212,6 +223,10 @@ export default function App() {
                 <Icon name="chevron" size={18} />
               </div>
             </div>
+            <MicrophoneSetup microphones={SETUP_MICROPHONES}
+              groups={setupGroups.map((group) => ({ ...group, pickupMode: configurations.microphones[group.id].pickupMode }))}
+              initialMaps={SETUP_MAPS} preferredGroupId={selectedSetupGroupId} mapRequest={setupMapRequest}
+              active={showMicrophoneSetup && !showFeedback} onToggleGroup={toggleSetupGroup} onMapOpenChange={setSetupMapOpen} />
             <div className="group-list-section">
               <div className="group-list-heading">
                 <h2>Select group</h2>
@@ -221,7 +236,7 @@ export default function App() {
                 </div>
               </div>
               <div className="group-list">
-                {groups.map((group) => <GroupItem key={group.id} group={group} selected={group.id === selectedGroupId} onSelect={() => selectGroup(group.id)} onToggle={() => toggleGroup(group.id)} />)}
+                {viewGroups.map((group) => <GroupItem key={group.id} group={group} selected={group.id === currentGroupId} onSelect={() => selectGroup(group.id)} onToggle={() => showMicrophoneSetup ? toggleSetupGroup(group.id) : toggleGroup(group.id)} />)}
               </div>
             </div>
           </aside>
@@ -272,7 +287,7 @@ export default function App() {
           </section>
         </section>
       </main>
-      <ChannelConfigureDialog open={configureOpen} suspended={mapSettingOpen} groupId={selectedGroup.id} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} mapTargetLabel={designVersion === 'shared' ? 'Zone Workspace' : 'Zone Map tab'} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
+      <ChannelConfigureDialog open={configureOpen} suspended={mapSettingOpen || setupMapOpen} groupId={selectedGroup.id} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} mapTargetLabel={designVersion === 'shared' ? 'Zone Workspace' : 'Zone Map tab'} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
       <MapSettingDialog open={designVersion === 'dialog' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.dialog[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
       <MapSettingDialog variant="previews" microphone={mapEntryMicrophone} open={designVersion === 'previews' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.previews[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
     </div>
