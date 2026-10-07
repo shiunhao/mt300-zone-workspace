@@ -219,7 +219,13 @@ export default function App() {
             <div className="output-layout">
               <label htmlFor="output-layout">Select Output Layout</label>
               <div className="select-field">
-                <select id="output-layout" defaultValue="Single"><option>Single</option></select>
+                <select id="output-layout" defaultValue="Single">
+                  <option>Single</option>
+                  <option>Side-by-side</option>
+                  <option>Active Speaker</option>
+                  <option>PIP</option>
+                  <option>Customize</option>
+                </select>
                 <Icon name="chevron" size={18} />
               </div>
             </div>
