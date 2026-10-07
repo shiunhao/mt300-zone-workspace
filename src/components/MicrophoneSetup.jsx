@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from './Icon';
 import MapSettingDialog from './MapSettingDialog';
 import { getMicrophoneGroups } from './workspaceGeometry';
@@ -21,6 +22,7 @@ export default function MicrophoneSetup({
   preferredGroupId,
   mapRequest,
   initialMaps,
+  sidebarTarget,
   onToggleGroup,
   onMapOpenChange,
 }) {
@@ -87,12 +89,7 @@ export default function MicrophoneSetup({
     setEntryPickupMode(undefined);
   }, [onMapOpenChange]);
 
-  return <section
-    className="microphone-setup"
-    aria-label="Microphone zone settings"
-    hidden={!active || !visible}
-  >
-    <header className="microphone-setup__header">
+  const microphoneSelector = <header className="microphone-setup__header" hidden={!active || !visible || open}>
       <label htmlFor={selectId}>Select microphone</label>
       <div className="select-field microphone-setup__select">
         <select id={selectId} value={selectedMicrophone?.id || ''} disabled={!active || !microphones.length}
@@ -103,11 +100,19 @@ export default function MicrophoneSetup({
         </select>
         <Icon name="chevron" size={16} />
       </div>
-    </header>
+    </header>;
+
+  return <section
+    className="microphone-setup"
+    aria-label="Microphone zone settings"
+    hidden={!active || !visible}
+  >
+    {sidebarTarget ? createPortal(microphoneSelector, sidebarTarget) : microphoneSelector}
     {!microphones.length && <p className="microphone-setup__empty">No microphones connected.</p>}
     {selectedMicrophone && <MapSettingDialog
       open={active && (visible || open)}
       embedded={!open}
+      previewTarget={sidebarTarget}
       variant="previews"
       microphone={selectedMicrophone}
       initialGroupId={entryGroupId}

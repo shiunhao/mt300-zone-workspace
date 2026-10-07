@@ -148,3 +148,8 @@ body:has(.map-setting-overlay:not([hidden])) .group-reference-menu { z-index: 12
   .map-setting-dialog--embedded .zone-map__canvas-wrap { min-height: 300px; }
   .map-setting-dialog--embedded .zone-map__inspector { max-height: none; }
 }
+.map-setting-dialog--external-previews .map-setting-dialog__body { display: flex; }
+.map-setting-dialog--external-previews .zone-map__layout { grid-template-columns: minmax(0, 1fr) 200px; }
+@media (max-width: 1099px) {
+  .map-setting-dialog--external-previews .zone-map__layout { grid-template-columns: minmax(0, 1fr); }
+}

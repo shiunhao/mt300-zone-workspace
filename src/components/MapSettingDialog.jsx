@@ -10,6 +10,7 @@ import './MapSettingDialog.css';
 export default function MapSettingDialog({
   open = false,
   embedded = false,
+  previewTarget,
   variant = 'reference',
   microphone = WORKSPACE_MICROPHONE,
   groups = [],
@@ -54,8 +55,22 @@ export default function MapSettingDialog({
     ? `${groupId} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
     : '';
 
+  const externalPreviews = embedded && hasPreviews && previewTarget;
+  const previews = hasPreviews && <GroupZonePreviews
+    groups={previewGroups}
+    currentGroupId={groupId}
+    initialGroupId={initialGroupId}
+    maps={previewMaps}
+    active={open}
+    onSelectGroup={(id) => {
+      setEditingGroupId(id);
+      onEditingGroupChange?.(id);
+    }}
+    onToggleGroup={onToggleGroup}
+  />;
+
   const content = <section
-        className={`map-setting-dialog${hasPreviews ? ' map-setting-dialog--previews' : ''}${embedded ? ' map-setting-dialog--embedded' : ''}`}
+        className={`map-setting-dialog${hasPreviews ? ' map-setting-dialog--previews' : ''}${embedded ? ' map-setting-dialog--embedded' : ''}${externalPreviews ? ' map-setting-dialog--external-previews' : ''}`}
         ref={dialogRef}
         hidden={embedded && !open}
         role={embedded ? 'region' : 'dialog'}
@@ -111,18 +126,7 @@ export default function MapSettingDialog({
           ><Icon name="close" size={22} /></button>
         </header>}
         <div className="map-setting-dialog__body">
-          {hasPreviews && <GroupZonePreviews
-            groups={previewGroups}
-            currentGroupId={groupId}
-            initialGroupId={initialGroupId}
-            maps={previewMaps}
-            active={open}
-            onSelectGroup={(id) => {
-              setEditingGroupId(id);
-              onEditingGroupChange?.(id);
-            }}
-            onToggleGroup={onToggleGroup}
-          />}
+          {externalPreviews ? createPortal(previews, previewTarget) : previews}
           <div className="map-setting-dialog__editor">
             {status && <p className="map-setting-dialog__status" id={statusId} role="status">{status}</p>}
             {selectedGroup ? <ZoneMapPanel

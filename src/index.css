@@ -70,6 +70,7 @@ svg { flex-shrink: 0; }
 .design-microphones .group-item { flex-shrink: 0; background: #252b32; }
 .design-microphones .group-item.is-selected { background: #293847; }
 .group-panel { background: var(--panel-2); border-right: 1px solid var(--line-2); }
+.group-panel > [hidden] { display: none !important; }
 .output-layout { padding: 24px 16px; border-bottom: 1px solid var(--line-2); }
 .output-layout label { display: block; color: var(--dim); font-size: 14px; line-height: 20px; margin-bottom: 8px; }
 .group-list-section { padding-top: 24px; }
