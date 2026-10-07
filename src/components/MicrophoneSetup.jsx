@@ -4,28 +4,30 @@ import MapSettingDialog from './MapSettingDialog';
 import { getMicrophoneGroups } from './workspaceGeometry';
 import './MicrophoneSetup.css';
 
-function MicrophoneIcon() {
-  return <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <rect x="3" y="3" width="22" height="22" rx="2" fill="#7d919f" stroke="#cadce8" />
-    <rect x="7" y="7" width="14" height="14" rx="1" fill="#b2c6d2" stroke="#d8e6ee" />
-    <path d="M10 11h8M10 14h8M10 17h8" stroke="#728b9b" />
-    <path d="M20 4h4" stroke="#6ce3ab" strokeWidth="1.5" />
-  </svg>;
+function chooseGroup(groups, microphoneId, preferredGroupId, rememberedGroupId) {
+  const microphoneGroups = getMicrophoneGroups(groups, microphoneId);
+  const editable = (group) => group.enabled !== false
+    && (!group.pickupMode || group.pickupMode === 'Talker Position');
+  return microphoneGroups.find((group) => group.id === rememberedGroupId)
+    || microphoneGroups.find((group) => group.id === preferredGroupId && editable(group))
+    || microphoneGroups.find(editable) || microphoneGroups[0];
 }
 
 export default function MicrophoneSetup({
   microphones = [],
   groups = [],
   active = true,
+  visible = true,
   preferredGroupId,
   mapRequest,
   initialMaps,
   onToggleGroup,
   onMapOpenChange,
 }) {
-  const titleId = useId();
+  const selectId = useId();
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState(microphones[0]?.id || '');
-  const [entryGroupId, setEntryGroupId] = useState('');
+  const [entryGroupId, setEntryGroupId] = useState(() =>
+    chooseGroup(groups, microphones[0]?.id, preferredGroupId)?.id || '');
   const [entryPickupMode, setEntryPickupMode] = useState();
   const [open, setOpen] = useState(false);
   const [lastGroupByMicrophone, setLastGroupByMicrophone] = useState({});
@@ -34,7 +36,10 @@ export default function MicrophoneSetup({
     || microphones[0];
 
   useEffect(() => {
-    if (!active) setOpen(false);
+    if (!active) {
+      setOpen(false);
+      setEntryPickupMode(undefined);
+    }
   }, [active]);
 
   useEffect(() => {
@@ -66,62 +71,47 @@ export default function MicrophoneSetup({
       ? previous : { ...previous, [selectedMicrophone.id]: groupId });
   }, [selectedMicrophone, groups]);
 
-  const openMicrophone = (microphone) => {
-    const microphoneGroups = getMicrophoneGroups(groups, microphone.id);
-    const preferredGroup = microphoneGroups.find((group) => group.id === lastGroupByMicrophone[microphone.id])
-      || microphoneGroups.find((group) => group.id === preferredGroupId && group.enabled !== false
-        && (!group.pickupMode || group.pickupMode === 'Talker Position'))
-      || microphoneGroups.find((group) => group.enabled !== false
-        && (!group.pickupMode || group.pickupMode === 'Talker Position'))
-      || microphoneGroups[0];
-    setSelectedMicrophoneId(microphone.id);
+  const selectMicrophone = (microphoneId) => {
+    const preferredGroup = chooseGroup(groups, microphoneId, preferredGroupId, lastGroupByMicrophone[microphoneId]);
+    setSelectedMicrophoneId(microphoneId);
     setEntryGroupId(preferredGroup?.id || '');
     setEntryPickupMode(undefined);
     if (preferredGroup) {
-      setLastGroupByMicrophone((previous) => ({ ...previous, [microphone.id]: preferredGroup.id }));
+      setLastGroupByMicrophone((previous) => ({ ...previous, [microphoneId]: preferredGroup.id }));
     }
-    onMapOpenChange?.(true);
-    setOpen(true);
   };
 
   const closeMap = useCallback(() => {
     onMapOpenChange?.(false);
     setOpen(false);
+    setEntryPickupMode(undefined);
   }, [onMapOpenChange]);
 
   return <section
     className="microphone-setup"
     aria-label="Microphone zone settings"
-    hidden={!active}
+    hidden={!active || !visible}
   >
     <header className="microphone-setup__header">
-      <h2 id={titleId}>Microphones</h2>
-      <span>Zone settings</span>
+      <label htmlFor={selectId}>Select microphone</label>
+      <div className="select-field microphone-setup__select">
+        <select id={selectId} value={selectedMicrophone?.id || ''} disabled={!active || !microphones.length}
+          onChange={(event) => selectMicrophone(event.target.value)}>
+          {microphones.map((microphone) => <option key={microphone.id} value={microphone.id}>
+            {microphone.id} · {microphone.model}
+          </option>)}
+        </select>
+        <Icon name="chevron" size={16} />
+      </div>
     </header>
-    <div className="microphone-setup__cards" aria-labelledby={titleId}>
-      {microphones.map((microphone) => <button
-          key={microphone.id}
-          className="microphone-setup__card"
-          type="button"
-          disabled={!active}
-          aria-label={`Configure zones for ${microphone.id} ${microphone.model}`}
-          onClick={() => openMicrophone(microphone)}
-        >
-          <span className="microphone-setup__icon"><MicrophoneIcon /></span>
-          <span className="microphone-setup__name">
-            <strong>{microphone.id}</strong>
-            <span>{microphone.model}</span>
-          </span>
-          <Icon className="microphone-setup__chevron" name="chevron" size={16} />
-        </button>)}
-      {!microphones.length && <p className="microphone-setup__empty">No microphones connected.</p>}
-    </div>
+    {!microphones.length && <p className="microphone-setup__empty">No microphones connected.</p>}
     {selectedMicrophone && <MapSettingDialog
-      open={active && open}
+      open={active && (visible || open)}
+      embedded={!open}
       variant="previews"
       microphone={selectedMicrophone}
       initialGroupId={entryGroupId}
-      entryPickupMode={entryPickupMode}
+      entryPickupMode={open ? entryPickupMode : undefined}
       initialMaps={initialMaps}
       groups={groups}
       onToggleGroup={onToggleGroup}

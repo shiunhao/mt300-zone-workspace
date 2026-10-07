@@ -126,3 +126,25 @@ body:has(.map-setting-overlay:not([hidden])) .group-reference-menu { z-index: 12
   .map-setting-dialog--previews .map-setting-dialog__body { grid-template-columns: minmax(0, 1fr); grid-template-rows: 146px minmax(0, 1fr); gap: 10px; }
   .map-setting-dialog--previews .zone-map__layout { grid-template-columns: minmax(0, 1fr) 148px; }
 }
+
+.map-setting-dialog--embedded { flex: 1; width: 100%; height: auto; border: 0; border-radius: 0; box-shadow: none; }
+.map-setting-dialog--embedded[hidden] { display: none; }
+.map-setting-dialog--embedded .map-setting-dialog__body { grid-template-columns: 136px minmax(0, 1fr); gap: 12px; padding: 0; }
+.map-setting-dialog--embedded .zone-map__layout { grid-template-columns: minmax(0, 1fr) 164px; gap: 12px; }
+.map-setting-dialog--embedded .group-zone-previews__list { padding: 8px; gap: 8px; }
+.map-setting-dialog--embedded .group-zone-previews__heading { flex-wrap: wrap; gap: 4px; padding: 8px 38px 8px 8px; }
+.map-setting-dialog--embedded .group-zone-previews__heading > span:last-child { flex-basis: 100%; margin-left: 11px; }
+.map-setting-dialog--embedded .zone-map__main { padding: 8px; }
+.map-setting-dialog--embedded .zone-map__inspector-section { padding: 10px; }
+
+@media (max-width: 1199px) {
+  .map-setting-dialog--embedded .map-setting-dialog__body { grid-template-columns: 112px minmax(0, 1fr); gap: 8px; }
+  .map-setting-dialog--embedded .zone-map__layout { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .map-setting-dialog--embedded .zone-map__inspector { max-height: 180px; overflow-y: auto; width: 100%; }
+  .map-setting-dialog--embedded .zone-map__main { min-height: 200px; }
+}
+@media (max-width: 699px) {
+  .map-setting-dialog--embedded .map-setting-dialog__body { grid-template-columns: minmax(0, 1fr); grid-template-rows: 140px minmax(0, 1fr); }
+  .map-setting-dialog--embedded .zone-map__canvas-wrap { min-height: 300px; }
+  .map-setting-dialog--embedded .zone-map__inspector { max-height: none; }
+}

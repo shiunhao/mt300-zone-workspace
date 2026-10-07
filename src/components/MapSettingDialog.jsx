@@ -9,6 +9,7 @@ import './MapSettingDialog.css';
 
 export default function MapSettingDialog({
   open = false,
+  embedded = false,
   variant = 'reference',
   microphone = WORKSPACE_MICROPHONE,
   groups = [],
@@ -30,9 +31,12 @@ export default function MapSettingDialog({
   const hasPreviews = variant === 'previews';
 
   useEffect(() => {
-    if (open) setEditingGroupId(initialGroupId);
-  }, [open, initialGroupId]);
-  useDialogFocus(open, dialogRef, onClose);
+    setEditingGroupId(initialGroupId);
+  }, [initialGroupId, microphone.id]);
+  useEffect(() => {
+    if (open && !embedded) setEditingGroupId(initialGroupId);
+  }, [open, embedded, initialGroupId]);
+  useDialogFocus(open && !embedded, dialogRef, onClose);
 
   const scopedGroups = hasPreviews ? getMicrophoneGroups(groups, microphone.id) : groups;
   const selectedGroup = scopedGroups.find((group) => group.id === editingGroupId)
@@ -50,26 +54,20 @@ export default function MapSettingDialog({
     ? `${groupId} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
     : '';
 
-  return createPortal(
-    <div
-      className="map-setting-overlay"
-      hidden={!open}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !document.querySelector('.design-version-menu')) onClose();
-      }}
-    >
-      <section
-        className={`map-setting-dialog${hasPreviews ? ' map-setting-dialog--previews' : ''}`}
+  const content = <section
+        className={`map-setting-dialog${hasPreviews ? ' map-setting-dialog--previews' : ''}${embedded ? ' map-setting-dialog--embedded' : ''}`}
         ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
+        hidden={embedded && !open}
+        role={embedded ? 'region' : 'dialog'}
+        aria-modal={embedded ? undefined : 'true'}
+        aria-label={embedded ? `${microphone.id} microphone zones` : undefined}
+        aria-labelledby={embedded ? undefined : titleId}
         aria-describedby={status ? statusId : undefined}
-        tabIndex={-1}
-        data-mt-dialog
-        data-modal-level="1200"
+        tabIndex={embedded ? undefined : -1}
+        data-mt-dialog={embedded ? undefined : true}
+        data-modal-level={embedded ? undefined : '1200'}
       >
-        <header className="map-setting-dialog__header">
+        {!embedded && <header className="map-setting-dialog__header">
           {hasPreviews ? <div className="map-setting-dialog__microphone" aria-label={`Microphone ${microphone.id} ${microphone.model}`}>
             <svg className="map-setting-dialog__microphone-icon" width="32" height="32" viewBox="0 0 28 28" fill="none" aria-hidden="true">
               <rect x="3" y="3" width="22" height="22" rx="2" fill="#7d919f" stroke="#cadce8" />
@@ -111,7 +109,7 @@ export default function MapSettingDialog({
             disabled={!open}
             onClick={onClose}
           ><Icon name="close" size={22} /></button>
-        </header>
+        </header>}
         <div className="map-setting-dialog__body">
           {hasPreviews && <GroupZonePreviews
             groups={previewGroups}
@@ -141,7 +139,18 @@ export default function MapSettingDialog({
             /> : <p className="map-setting-dialog__empty">No camera groups connected to {microphone.id}.</p>}
           </div>
         </div>
-      </section>
+      </section>;
+
+  if (embedded) return content;
+  return createPortal(
+    <div
+      className="map-setting-overlay"
+      hidden={!open}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !document.querySelector('.design-version-menu')) onClose();
+      }}
+    >
+      {content}
     </div>,
     document.body,
   );
