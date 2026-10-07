@@ -30,12 +30,11 @@ const initialGroups = [
   { id: 'G3', microphoneId: WORKSPACE_MICROPHONE.id, camera: 'TR313', enabled: true, micIndicator: 'green' },
 ]
 
-const detailTabLabels = { channel: 'Channel', position: 'Active Position', zone: 'Zone Map (Talker Position)', microphones: 'Microphone Zones' }
+const detailTabLabels = { channel: 'Channel', position: 'Active Position', zone: 'Zone Map (Talker Position)' }
 const detailTabTracks = {
   channel: { start: '0%', width: '28%' },
   position: { start: '28%', width: '28%' },
   zone: { start: '56%', width: '44%' },
-  microphones: { start: '56%', width: '44%' },
 }
 const designVersions = ['reference', 'shared', 'dialog', 'previews', 'microphones']
 const initialConfigurations = Object.fromEntries(designVersions.map((version) => [version,
@@ -84,6 +83,7 @@ export default function App() {
   const [selectedGroupId, setSelectedGroupId] = useState('G2')
   const [selectedSetupGroupId, setSelectedSetupGroupId] = useState('G2')
   const [designVersion, setDesignVersion] = useState('microphones')
+  const [settingsPage, setSettingsPage] = useState('auto')
   const [showFeedback, setShowFeedback] = useState(false)
   const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', shared: 'channel', dialog: 'channel', previews: 'channel', microphones: 'channel' })
   const [configurations, setConfigurations] = useState(initialConfigurations)
@@ -101,10 +101,9 @@ export default function App() {
   const selectedGroup = viewGroups.find((group) => group.id === currentGroupId)
   const detailRoute = detailTabsByVersion[designVersion]
   const selectedDetailTab = designVersion === 'shared' && detailRoute === 'zone' ? 'channel' : detailRoute
-  const showMicrophoneZones = showMicrophoneSetup && selectedDetailTab === 'microphones'
-  const detailTabs = designVersion === 'reference' ? ['channel', 'position', 'zone']
-    : showMicrophoneSetup ? ['channel', 'position', 'microphones'] : ['channel', 'position']
-  const tabTrack = designVersion === 'reference' || showMicrophoneSetup ? detailTabTracks[selectedDetailTab] : { start: selectedDetailTab === 'position' ? '50%' : '0%', width: '50%' }
+  const showMicrophoneZones = showMicrophoneSetup && settingsPage === 'microphones'
+  const detailTabs = designVersion === 'reference' ? ['channel', 'position', 'zone'] : ['channel', 'position']
+  const tabTrack = designVersion === 'reference' ? detailTabTracks[selectedDetailTab] : { start: selectedDetailTab === 'position' ? '50%' : '0%', width: '50%' }
   const configuration = configurations[designVersion][currentGroupId]
   const showZoneWorkspace = designVersion === 'shared' && detailRoute === 'zone'
   const usesMapDialog = designVersion === 'dialog' || designVersion === 'previews' || showMicrophoneSetup
@@ -180,6 +179,15 @@ export default function App() {
     document.getElementById(`${nextTab}-tab`)?.focus()
   }
 
+  const handleSettingsTabKeyDown = (event) => {
+    if (!showMicrophoneSetup || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const nextPage = event.key === 'Home' ? 'auto' : event.key === 'End' ? 'microphones'
+      : showMicrophoneZones ? 'auto' : 'microphones'
+    setSettingsPage(nextPage)
+    document.getElementById(nextPage === 'auto' ? 'auto-tab' : 'microphones-tab')?.focus()
+  }
+
   return (
     <div className={`settings-shell design-${designVersion}${showFeedback ? ' is-feedback-page' : ''}`}>
       <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={(usesMapDialog && mapSettingOpen) || (showMicrophoneSetup && !showFeedback && setupMapOpen)} />
@@ -204,13 +212,18 @@ export default function App() {
         </header>
 
         <div className="mode-tabs" role="tablist" aria-label="Mode settings" hidden={showFeedback}>
-          <button className="mode-tab is-active" id="auto-tab" type="button" role="tab" aria-selected="true" aria-controls="auto-settings">Auto Mode Settings</button>
+          <button className={`mode-tab${!showMicrophoneZones ? ' is-active' : ''}`} id="auto-tab" type="button" role="tab"
+            aria-selected={!showMicrophoneZones} aria-controls="auto-settings" tabIndex={showMicrophoneZones ? -1 : 0}
+            onClick={() => setSettingsPage('auto')} onKeyDown={handleSettingsTabKeyDown}>Auto Mode Settings</button>
           <button className="mode-tab" type="button" role="tab" aria-selected="false" tabIndex={-1}>Manual Mode Settings</button>
+          {showMicrophoneSetup && <button className={`mode-tab${showMicrophoneZones ? ' is-active' : ''}`} id="microphones-tab" type="button" role="tab"
+            aria-selected={showMicrophoneZones} aria-controls="microphones-settings" tabIndex={showMicrophoneZones ? 0 : -1}
+            onClick={() => setSettingsPage('microphones')} onKeyDown={handleSettingsTabKeyDown}>Microphone Zones</button>}
         </div>
 
         <UserFeedbackPage active={showFeedback} />
 
-        <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback}>
+        <section className={`workspace${showZoneWorkspace ? ' is-microphone-workspace' : ''}`} id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback || showMicrophoneZones}>
           <MicrophoneWorkspace
             groups={groups.map((group) => ({ ...group, pickupMode: configurations.shared[group.id].pickupMode }))}
             selectedGroupId={selectedGroupId}
@@ -219,8 +232,8 @@ export default function App() {
             onOpenGroupSettings={backToChannel}
             active={showZoneWorkspace}
           />
-          <aside className="group-panel" aria-label={showMicrophoneZones ? 'Microphone zone navigation' : 'Group settings'} hidden={showZoneWorkspace}>
-            <div className="output-layout" hidden={showMicrophoneZones}>
+          <aside className="group-panel" aria-label="Group settings" hidden={showZoneWorkspace}>
+            <div className="output-layout">
               <label htmlFor="output-layout">Select Output Layout</label>
               <div className="select-field">
                 <select id="output-layout" defaultValue="Single">
@@ -233,7 +246,7 @@ export default function App() {
                 <Icon name="chevron" size={18} />
               </div>
             </div>
-            <div className="group-list-section" hidden={showMicrophoneZones}>
+            <div className="group-list-section">
               <div className="group-list-heading">
                 <h2>Select group</h2>
                 <div className="group-heading-actions">
@@ -245,12 +258,11 @@ export default function App() {
                 {viewGroups.map((group) => <GroupItem key={group.id} group={group} selected={group.id === currentGroupId} onSelect={() => selectGroup(group.id)} onToggle={() => showMicrophoneSetup ? toggleSetupGroup(group.id) : toggleGroup(group.id)} />)}
               </div>
             </div>
-            <div className="microphone-zones-navigation" ref={setMicrophoneSidebar} hidden={!showMicrophoneZones} />
           </aside>
 
-          <section className="group-detail" aria-label={showMicrophoneZones ? 'Microphone zones settings' : `${selectedGroup.id} settings`} hidden={showZoneWorkspace}>
+          <section className="group-detail" aria-label={`${selectedGroup.id} settings`} hidden={showZoneWorkspace}>
             <div className="detail-header">
-              <h1 className="detail-heading">{selectedDetailTab === 'microphones' ? 'Microphone Zones' : `${selectedGroup.id} - ${selectedGroup.camera}`}</h1>
+              <h1 className="detail-heading">{selectedGroup.id} - {selectedGroup.camera}</h1>
               {selectedDetailTab === 'channel' && (
                 <div className="channel-search">
                   <Icon name="search" size={16} />
@@ -259,10 +271,10 @@ export default function App() {
               )}
             </div>
             <div className="detail-tabbar">
-              <div className={`detail-tabs${designVersion === 'reference' || showMicrophoneSetup ? ' has-zone' : ''}`} style={{ '--tab-start': tabTrack.start, '--tab-width': tabTrack.width }} role="tablist" aria-label="Group view">
+              <div className={`detail-tabs${designVersion === 'reference' ? ' has-zone' : ''}`} style={{ '--tab-start': tabTrack.start, '--tab-width': tabTrack.width }} role="tablist" aria-label="Group view">
                 {detailTabs.map((tab) => <button key={tab} className={`detail-tab ${selectedDetailTab === tab ? 'is-active' : ''}`} id={`${tab}-tab`} type="button" role="tab" aria-selected={selectedDetailTab === tab} aria-controls={`${tab}-view`} tabIndex={selectedDetailTab === tab ? 0 : -1} onClick={() => setSelectedDetailTab(tab)} onKeyDown={handleDetailTabKeyDown}>{detailTabLabels[tab]}</button>)}
               </div>
-              {selectedDetailTab !== 'zone' && selectedDetailTab !== 'microphones' && <div className="detail-tab-actions">
+              {selectedDetailTab !== 'zone' && <div className="detail-tab-actions">
                 {selectedDetailTab === 'channel' && <button className="button channel-configure-button" type="button" onClick={openConfigure}>Channel Configure</button>}
                 {(designVersion === 'shared' || designVersion === 'previews') && selectedDetailTab === 'channel' && <button className="button zone-map-entry-button" id="zone-map-button" type="button" onClick={() => openMapSetting()}>Zone Map</button>}
                 <button className="button time-button" type="button"><Icon name="clock" size={17} /><span>Time</span></button>
@@ -282,14 +294,6 @@ export default function App() {
               </div>
               <div className="map-container"><PositionMap groupName={selectedGroup.id} /></div>
             </div>
-            <div className="microphones-content" id="microphones-view" role="tabpanel" aria-labelledby="microphones-tab" hidden={!showMicrophoneSetup || selectedDetailTab !== 'microphones'}>
-              <MicrophoneSetup microphones={SETUP_MICROPHONES}
-                groups={setupGroups.map((group) => ({ ...group, pickupMode: configurations.microphones[group.id].pickupMode }))}
-                initialMaps={SETUP_MAPS} preferredGroupId={selectedSetupGroupId} mapRequest={setupMapRequest}
-                sidebarTarget={microphoneSidebar}
-                visible={selectedDetailTab === 'microphones'} active={showMicrophoneSetup && !showFeedback}
-                onToggleGroup={toggleSetupGroup} onMapOpenChange={setSetupMapOpen} />
-            </div>
             <div className="zone-content" id="zone-view" role={designVersion === 'reference' ? 'tabpanel' : undefined} aria-labelledby={designVersion === 'reference' ? 'zone-tab' : undefined} hidden={designVersion !== 'reference' || selectedDetailTab !== 'zone'}>
               {configuration.pickupMode !== 'Talker Position' && <div className="map-mode-message">
                 <div><strong>Zone Map uses Talker Position</strong><p>Current pickup mode: {configuration.pickupMode}. Save Talker Position in Channel Configure to edit this map.</p></div>
@@ -299,6 +303,19 @@ export default function App() {
                 <ZoneMapPanel variant="reference" groupId={selectedGroup.id} groups={groups} enabled={selectedGroup.enabled} active={!showFeedback && selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
               </div>
             </div>
+          </section>
+        </section>
+        <section className="workspace microphone-settings-workspace" id="microphones-settings" role="tabpanel" aria-labelledby="microphones-tab" hidden={showFeedback || !showMicrophoneZones}>
+          <aside className="group-panel" aria-label="Microphone zone navigation">
+            <div className="microphone-zones-navigation" ref={setMicrophoneSidebar} />
+          </aside>
+          <section className="group-detail" aria-label="Microphone zones settings">
+            <header className="detail-header"><h1 className="detail-heading">Microphone Zones</h1></header>
+            <MicrophoneSetup microphones={SETUP_MICROPHONES}
+              groups={setupGroups.map((group) => ({ ...group, pickupMode: configurations.microphones[group.id].pickupMode }))}
+              initialMaps={SETUP_MAPS} preferredGroupId={selectedSetupGroupId} mapRequest={setupMapRequest}
+              sidebarTarget={microphoneSidebar} visible={showMicrophoneZones} active={showMicrophoneSetup && !showFeedback}
+              onToggleGroup={toggleSetupGroup} onMapOpenChange={setSetupMapOpen} />
           </section>
         </section>
       </main>

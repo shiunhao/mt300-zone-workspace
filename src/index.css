@@ -128,7 +128,6 @@ svg { flex-shrink: 0; }
 .reconfigure-button { height: 32px; min-width: 120px; }
 .map-container { flex: 1; min-height: 400px; margin: 0 8px; }
 .zone-content { flex: 1; min-width: 0; padding-top: 20px; }
-.microphones-content { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; padding-top: 12px; }
 .map-mode-message { display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--line-2); border-radius: 6px; padding: 24px; background: var(--panel-2); }
 .map-mode-message strong { font-size: 15px; font-weight: 600; }
 .map-mode-message p { color: var(--dim); font-size: 13px; line-height: 1.6; margin-bottom: 0; }
