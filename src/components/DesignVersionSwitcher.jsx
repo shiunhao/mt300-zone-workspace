@@ -9,11 +9,6 @@ const versions = [
     label: 'Independent Group Maps',
   },
   {
-    value: 'shared',
-    code: 'V2',
-    label: 'Zone Workspace',
-  },
-  {
     value: 'dialog',
     code: 'V3',
     label: 'Map Setting Dialog',
