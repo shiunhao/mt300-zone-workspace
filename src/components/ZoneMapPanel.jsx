@@ -137,6 +137,7 @@ export default function ZoneMapPanel({
   maps, onMapsChange, visibleGroupIds, overview = false, onSelectGroup, toolbarSlot,
   selectedZoneId = null, onSelectedZoneChange, showReferences = true,
   microphone = WORKSPACE_MICROPHONE, showGroupContext = false,
+  compactSettings = false, toolbarStart, mapIdentity, readOnly = false, emptyMessage,
 }) {
   const isWorkspace = variant === 'workspace';
   const isOverview = isWorkspace && overview;
@@ -164,10 +165,10 @@ export default function ZoneMapPanel({
   const visibleIds = new Set(visibleGroupIds || allGroups.map((group) => group.id));
   const visibleGroups = allGroups.filter((group) => visibleIds.has(group.id));
   const referenceGroups = isWorkspace ? visibleGroups.filter((group) => group.id !== groupId) : showReferences ? otherGroups.filter((group) => references[group.id]) : [];
-  const selectionKey = groupId;
-  const mapContext = `${variant}/${groupId}/${isOverview ? 'overview' : 'edit'}`;
+  const selectionKey = mapIdentity || groupId;
+  const mapContext = `${variant}/${groupId}/${mapIdentity || ''}/${isOverview ? 'overview' : 'edit'}`;
   const currentZones = availableMaps[groupId] || [];
-  const canEdit = !isOverview && (!isWorkspace || currentGroup.enabled !== false);
+  const canEdit = !readOnly && !isOverview && (!isWorkspace || currentGroup.enabled !== false);
   const editable = isInteractive && canEdit;
   const activePreview = dragPreview?.context === mapContext ? dragPreview : null;
   const displayZones = activePreview ? currentZones.map((zone) => zone.id === activePreview.zone.id ? activePreview.zone : zone) : currentZones;
@@ -280,7 +281,7 @@ export default function ZoneMapPanel({
   }
   function addZone() {
     if (!editable) return;
-    let number = nextId.current;
+    let number = compactSettings ? 1 : nextId.current;
     while (currentZones.some((zone) => zone.id === `zone-${number}` || zone.name === `Zone ${number}`)) number += 1;
     let zone = null;
     // Start at the origin, then look outward for a free half-meter grid point.
@@ -452,12 +453,12 @@ export default function ZoneMapPanel({
   }
 
   return (
-    <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : `${groupId} zone map`} aria-disabled={!enabled} inert={enabled ? undefined : ''}>
+    <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : `${groupId} zone map`} aria-disabled={!enabled} inert={enabled ? undefined : ''}>
       <div className="zone-map__layout">
         <div className="zone-map__main">
           <div className="zone-map__toolbar">
-            {showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong>{groupId}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
-              : <span className="zone-map__model">{microphone.model}</span>}
+            {toolbarStart || (showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong>{groupId}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
+              : <span className="zone-map__model">{microphone.model}</span>)}
             <div><button type="button" className="zone-map__button" disabled={!editable} onClick={addZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>
             {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : showReferences && <GroupReferenceDropdown groups={otherGroups} checked={references} disabled={!isInteractive} onChange={changeReference} />}
           </div>
@@ -473,9 +474,9 @@ export default function ZoneMapPanel({
               </g>)}
               {isOverview ? visibleGroups.flatMap((group) => (availableMaps[group.id] || []).map((zone) => <line key={`connector-${group.id}-${zone.id}`} className={`zone-map__connector zone-map__overview-connector${group.id === groupId && selectedZone?.id === zone.id ? ' is-selected' : ''}`} style={{ '--group-zone-color': group.enabled === false ? '#77828f' : getGroupReferenceColor(group.id) }} x1={ORIGIN} y1={ORIGIN} x2={ORIGIN + zone.x * UNITS_PER_METER} y2={ORIGIN - zone.y * UNITS_PER_METER} pointerEvents="none" aria-hidden="true" />)) : displayZones.map((zone) => <line key={`connector-${zone.id}`} className={`zone-map__connector${selectedZone?.id === zone.id ? ' is-selected' : ''}`} x1={ORIGIN} y1={ORIGIN} x2={ORIGIN + zone.x * UNITS_PER_METER} y2={ORIGIN - zone.y * UNITS_PER_METER} pointerEvents="none" aria-hidden="true" />)}
               {isOverview ? visibleGroups.flatMap((group) => (availableMaps[group.id] || []).map((zone) => renderZone(zone, group))) : displayZones.map((zone) => renderZone(zone))}
-              <g className="zone-map__mic" transform={`translate(${ORIGIN} ${ORIGIN})`} pointerEvents="none"><rect x="-18" y="-18" width="36" height="36" rx="5" /><rect x="-10" y="-10" width="20" height="20" rx="2" /><path d="M-5 -5h10M-5 0h10M-5 5h10" /><text x="26" y="24">{microphone.id} · (0, 0)</text></g>
+              <g className="zone-map__mic" transform={`translate(${ORIGIN} ${ORIGIN})`} pointerEvents="none"><rect x="-18" y="-18" width="36" height="36" rx="5" /><rect x="-10" y="-10" width="20" height="20" rx="2" /><path d="M-5 -5h10M-5 0h10M-5 5h10" /><text x="26" y="24">{compactSettings ? '(0, 0)' : `${microphone.id} · (0, 0)`}</text></g>
             </svg>
-            {!hasVisibleZones && <div className="zone-map__empty">No zones yet{canEdit && <span>Add a zone to define the coverage area.</span>}</div>}
+            {!hasVisibleZones && <div className="zone-map__empty">{emptyMessage || 'No zones yet'}{canEdit && <span>Add a zone to define the coverage area.</span>}</div>}
             <MapViewControls zoom={zoom} onReset={resetView} onZoomIn={zoomIn} onZoomOut={zoomOut} disabled={!enabled} label="Zone map" maxZoom={150} />
           </div>
         </div>

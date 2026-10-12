@@ -24,6 +24,11 @@ const versions = [
     label: 'Microphone Setup',
   },
   {
+    value: 'settings',
+    code: 'V6',
+    label: 'Zone Settings Library',
+  },
+  {
     value: 'feedback',
     label: '使用者回饋與痛點',
   },

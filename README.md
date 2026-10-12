@@ -24,12 +24,13 @@ npm run build
 - Channel 顯示 8 列 Microphone／Camera／Human tracking／Remarks；可選 Preset、編輯備註、搜尋。
 - Profile、Output Layout、Position view 保留截圖中的選項。
 - Channel Configure 提供 Lobe／Coverage／Talker Position 與對應欄位，Map Setting 依版本進入分頁或設定視窗。
-- 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V3 Map Setting Dialog、V4 Group Previews、V5 Microphone Setup；V3／V4／V5 Zone Map 視窗開啟時隱藏選單，關閉後恢復。版本編號沿用設計討論紀錄。
-- 預覽初始進入 V5 原有的 Auto Mode Group／Channel 畫面，Manual Mode Settings 旁新增 Microphone Zones 上層頁籤。V3／V4／V5 的 Auto Mode 保留 Channel／Active Position 兩個子分頁。V4 的按鈕依序為 Channel Configure、Zone Map、Time，直接開啟 Group Previews 設定視窗，關閉後回到 Channel 並保留地圖設定。V3 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V1 保留 Zone Map 子分頁。
+- 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V3 Map Setting Dialog、V4 Group Previews、V5 Microphone Setup、V6 Zone Settings Library；V3／V4／V5／V6 Zone Map 視窗開啟時隱藏選單，關閉後恢復。版本編號沿用設計討論紀錄。
+- 預覽初始進入 V6 Microphone Zones 畫面，Auto Mode Settings 與 Manual Mode Settings 保留在同一層；切回 V5 時仍可檢視原有 Auto Mode Group／Channel 畫面及 Microphone Zones 上層頁籤。V3／V4／V5／V6 的 Auto Mode 保留 Channel／Active Position 兩個子分頁。V4 的按鈕依序為 Channel Configure、Zone Map、Time，直接開啟 Group Previews 設定視窗，關閉後回到 Channel 並保留地圖設定。V3 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V1 保留 Zone Map 子分頁。
 - 版本選單沿用 S311／TR615 的緊湊選單形式，位於 Help／X 下方，不占用原有按鈕的位置。
 - 同一個下拉選單可切換「使用者回饋與痛點」討論頁，列出 AVtech Media／Nathan 測試 MT500 V22 的完整英文原文、中文翻譯、痛點整理，以及客戶全域設定要求與 Jira 跨 Group 參照方案的差異。返回設計時保留目前版本、Group、分頁、搜尋及本次頁面的地圖設定。
-- 回饋頁以獨立置中內容區呈現，隱藏產品導覽、Profile、模式分頁與 Help／Close，也不顯示返回按鈕；右上角保留下拉選單，直接切換回 V1、V3、V4、V5。
+- 回饋頁以獨立置中內容區呈現，隱藏產品導覽、Profile、模式分頁與 Help／Close，也不顯示返回按鈕；右上角保留下拉選單，直接切換回 V1、V3、V4、V5、V6。
 - V5 Microphone Setup 的 Microphone Zones 與 Auto Mode Settings、Manual Mode Settings 位於同一層。Auto Mode 保留 Output Layout、Group 清單、Channel 表格、Active Position、Channel Configure 與 Time；獨立的麥克風頁左側為麥克風選單與該設備搭配的攝影機 Group 縮圖，右側只保留 Zone Map 與 Zone settings。麥克風選單顯示 ID 與型號，記住各麥克風最後選取的 Group，包含停用組。Channel Group 與地圖編輯組分開選取；切換上層頁籤保留 Channel 搜尋、備註、原選取、麥克風選擇、地圖與視角。Channel Configure 的 Map Setting 仍以視窗開啟同一份 V5 地圖，縮圖留在視窗內；關閉返回原 Configure 並保留草稿，取消後內嵌地圖依已儲存模式判斷可否編輯。Group 開關在各入口同步，僅控制該組。切換麥克風、版本及回饋頁保留地圖資料。V5 的地圖、啟用狀態與 Pickup Mode 獨立於 V1、V3、V4；V5 Groups 與其他方案的選取也分開保存。V5 示範資料包含 MIC-01（G1～G3）與 MIC-02（G4、G5），均為 Shure MXA925-S，未連線到實際設備。
+- V6 Zone Settings Library 沿用 V5 的上層 Microphone Zones 入口與麥克風／Group 縮圖導覽，增加同一台麥克風內的具名「區域設定檔」下拉選單，以及新增、重新命名、複製、刪除功能。選擇設定檔立即套用到目前 Group，直接在主地圖編輯範圍即更新該設定檔，沒有額外的儲存或套用按鈕。多個 Groups 選用同一份設定檔時共用範圍；需要獨立修改時可建立副本。設定檔只共用 Zone 位置與尺寸，攝影機及 Channel 配置仍屬於各 Group。主地圖保留完整可用高度，使用平移／縮放檢視，不出現捲軸；設定檔管理使用彈窗，麥克風與 Group 資訊保留在左側，主區不重複顯示。Channel Configure → Talker Position → Map Setting 可開啟同一份 V6 設定，關閉後回到原 Configure 並保留草稿。V6 的地圖、設定檔、Group 啟用狀態、Auto Group 選取與 Pickup Mode 與其他版本隔離；切換麥克風、上層頁籤、版本及回饋頁保留本次頁面的設定，重新整理則回到展示資料。
 - V1：每個 Group 獨立編輯，其他 Group 的同 mic zones 作為只讀虛線參照。
 - V3 沿用原設計流程：Channel Configure → Talker Position → Map Setting → Zone Map 視窗。視窗上方可切換 Group 與啟用狀態，當前組可直接編輯，其他組可作為彩色虛線參照；保留新增、刪除、四角縮放、手動座標與尺寸、重疊排斥、51 × 51 格平移與 25%～150% 縮放。各組與各方案的地圖資料獨立，關閉或切換後仍保留本次頁面的資料。
 - V3 關閉地圖視窗後回到原本的 Channel Configure，保留尚未儲存的 Pickup Mode；在草稿中選 Talker Position 即可開啟 Map Setting，不會自動儲存模式。切換視窗內 Group 不改變原本 Configure 的 Group；其他組仍受已儲存的 Pickup Mode 與停用狀態限制。

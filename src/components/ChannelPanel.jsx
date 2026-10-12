@@ -13,9 +13,9 @@ function createChannels() {
   }))
 }
 
-export default function ChannelPanel({ groupId = 'G2', searchQuery = '' }) {
+export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKey = groupId }) {
   const [channelsByGroup, setChannelsByGroup] = useState({})
-  const channels = channelsByGroup[groupId] ?? createChannels()
+  const channels = channelsByGroup[stateKey] ?? createChannels()
   const query = searchQuery.trim().toLocaleLowerCase()
   const visibleChannels = channels.filter((channel) => (
     [`Channel ${channel.number}`, channel.preset, channel.remarks]
@@ -25,7 +25,7 @@ export default function ChannelPanel({ groupId = 'G2', searchQuery = '' }) {
   function updateChannel(number, field, value) {
     setChannelsByGroup((current) => ({
       ...current,
-      [groupId]: (current[groupId] ?? createChannels()).map((channel) => (
+      [stateKey]: (current[stateKey] ?? createChannels()).map((channel) => (
         channel.number === number ? { ...channel, [field]: value } : channel
       )),
     }))
