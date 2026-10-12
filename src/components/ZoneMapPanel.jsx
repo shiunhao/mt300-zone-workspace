@@ -465,7 +465,7 @@ export default function ZoneMapPanel({
           <div className="zone-map__toolbar">
             {toolbarStart || (showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong>{groupId}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
               : <span className="zone-map__model">{microphone.model}</span>)}
-            {!compactSettings && zoneActions}
+            {zoneActions}
             {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : showReferences && <GroupReferenceDropdown groups={otherGroups} checked={references} disabled={!isInteractive} onChange={changeReference} />}
           </div>
           <div className="zone-map__canvas-wrap" ref={mapRef}>
@@ -491,7 +491,6 @@ export default function ZoneMapPanel({
           {compactSettings ? <>
             <header className="zone-map__zone-card-header">{zoneSelector}</header>
             <div className="zone-map__zone-card-body">
-              {zoneActions}
               {selectedZone ? <div className="zone-map__zone-card-columns">
                 <section aria-label="Position of zone center"><h4>Position</h4>{positionFields}</section>
                 <section aria-label="Zone size"><h4>Size</h4>{sizeFields}</section>
