@@ -452,6 +452,12 @@ export default function ZoneMapPanel({
     </g>;
   }
 
+  const zoneActions = <div className="zone-map__zone-actions"><button type="button" className="zone-map__button" disabled={!editable} onClick={addZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>;
+  const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled} onChange={(event) => selectZone(event.target.value || null)}><option value="">Select a zone</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
+  const positionFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-x`} label="X" value={selectedZone.x} disabled={!editable} onCommit={(value) => commitField('x', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-y`} label="Y" value={selectedZone.y} disabled={!editable} onCommit={(value) => commitField('y', value)} /></div>;
+  const sizeFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-width`} label="Width" value={selectedZone.width} disabled={!editable} onCommit={(value) => commitField('width', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-height`} label="Height" value={selectedZone.height} disabled={!editable} onCommit={(value) => commitField('height', value)} /></div>;
+  const selectionHint = <p className="zone-map__helper zone-map__no-selection">{currentZones.length ? `Select a zone on the map to ${canEdit ? 'edit' : 'view'} its position and size.` : canEdit ? 'Add a zone to edit its position and size.' : 'No zones in this map.'}</p>;
+
   return (
     <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : `${groupId} zone map`} aria-disabled={!enabled} inert={enabled ? undefined : ''}>
       <div className="zone-map__layout">
@@ -459,7 +465,7 @@ export default function ZoneMapPanel({
           <div className="zone-map__toolbar">
             {toolbarStart || (showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong>{groupId}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
               : <span className="zone-map__model">{microphone.model}</span>)}
-            <div><button type="button" className="zone-map__button" disabled={!editable} onClick={addZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>
+            {!compactSettings && zoneActions}
             {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : showReferences && <GroupReferenceDropdown groups={otherGroups} checked={references} disabled={!isInteractive} onChange={changeReference} />}
           </div>
           <div className="zone-map__canvas-wrap" ref={mapRef}>
@@ -481,18 +487,27 @@ export default function ZoneMapPanel({
           </div>
         </div>
 
-        <aside className="zone-map__inspector" aria-label="Zone settings">
-          <div className="zone-map__inspector-section">
+        <aside className={`zone-map__inspector${compactSettings ? ' zone-map__zone-card' : ''}`} aria-label="Zone settings">
+          {compactSettings ? <>
+            <header className="zone-map__zone-card-header">{zoneSelector}</header>
+            <div className="zone-map__zone-card-body">
+              {zoneActions}
+              {selectedZone ? <div className="zone-map__zone-card-columns">
+                <section aria-label="Position of zone center"><h4>Position</h4>{positionFields}</section>
+                <section aria-label="Zone size"><h4>Size</h4>{sizeFields}</section>
+              </div> : selectionHint}
+            </div>
+          </> : <div className="zone-map__inspector-section">
             <h4>Zone settings{!canEdit && <span>Read-only</span>}</h4>
             {isWorkspace && <p className="zone-map__owner"><span className="zone-map__owner-color" style={{ backgroundColor: currentGroup.enabled === false ? '#77828f' : getGroupReferenceColor(groupId) }} /><strong>{groupId}</strong><span>{currentGroup.camera || '—'}</span></p>}
-            <label className="zone-map__zone-select">Selected zone<select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled} onChange={(event) => selectZone(event.target.value || null)}><option value="">Select a zone</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select></label>
+            <label className="zone-map__zone-select">Selected zone{zoneSelector}</label>
             {selectedZone ? <>
               <p className="zone-map__field-caption">Position · Zone center</p>
-              <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-x`} label="X" value={selectedZone.x} disabled={!editable} onCommit={(value) => commitField('x', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-y`} label="Y" value={selectedZone.y} disabled={!editable} onCommit={(value) => commitField('y', value)} /></div>
+              {positionFields}
               <p className="zone-map__field-caption">Size</p>
-              <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-width`} label="Width" value={selectedZone.width} disabled={!editable} onCommit={(value) => commitField('width', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-height`} label="Height" value={selectedZone.height} disabled={!editable} onCommit={(value) => commitField('height', value)} /></div>
-            </> : <p className="zone-map__helper zone-map__no-selection">{currentZones.length ? `Select a zone on the map to ${canEdit ? 'edit' : 'view'} its position and size.` : canEdit ? 'Add a zone to edit its position and size.' : 'No zones in this map.'}</p>}
-          </div>
+              {sizeFields}
+            </> : selectionHint}
+          </div>}
         </aside>
       </div>
       <div className="zone-map__status zone-map__status--hidden" role="status" aria-live="polite">{feedback}</div>

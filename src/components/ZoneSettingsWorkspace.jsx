@@ -235,9 +235,9 @@ export default function ZoneSettingsWorkspace({
   };
 
   const settingsControls = <div className="zone-settings-controls">
-    <label htmlFor={settingsSelectId}>區域設定檔</label>
+    <label htmlFor={settingsSelectId}>Zone Settings</label>
     <div className="select-field zone-settings-controls__select">
-      <select id={settingsSelectId} aria-label="區域設定檔" value={settings?.id || ''} disabled={!enabled}
+      <select id={settingsSelectId} aria-label="Zone Settings" value={settings?.id || ''} disabled={!enabled}
         onChange={event => { setMenuOpen(false); setLibrary(previous => assignSettings(previous, groups, group.id, event.target.value || null)); }}>
         {!settings && <option value="">選擇設定檔</option>}
         {scopedSettings.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
