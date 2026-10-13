@@ -137,7 +137,8 @@ export default function ZoneMapPanel({
   maps, onMapsChange, visibleGroupIds, overview = false, onSelectGroup, toolbarSlot,
   selectedZoneId = null, onSelectedZoneChange, showReferences = true,
   microphone = WORKSPACE_MICROPHONE, showGroupContext = false,
-  compactSettings = false, toolbarStart, mapIdentity, readOnly = false, emptyMessage,
+  compactSettings = false, toolbarStart, toolbarEnd, mapIdentity, readOnly = false, emptyMessage,
+  onAddZoneWithoutSettings,
 }) {
   const isWorkspace = variant === 'workspace';
   const isOverview = isWorkspace && overview;
@@ -303,6 +304,10 @@ export default function ZoneMapPanel({
     selectZone(zone.id);
     setFeedback(`${zone.name} added.`);
   }
+  function requestAddZone() {
+    if (editable) addZone();
+    else if (isInteractive && readOnly) onAddZoneWithoutSettings?.();
+  }
   function removeZone() {
     if (!selectedZone || !editable) return;
     updateZones((zones) => zones.filter((zone) => zone.id !== selectedZone.id));
@@ -452,7 +457,8 @@ export default function ZoneMapPanel({
     </g>;
   }
 
-  const zoneActions = <div className="zone-map__zone-actions"><button type="button" className="zone-map__button" disabled={!editable} onClick={addZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>;
+  const canAddZone = editable || (isInteractive && readOnly && Boolean(onAddZoneWithoutSettings));
+  const zoneActions = <div className="zone-map__zone-actions"><button type="button" className="zone-map__button" disabled={!canAddZone} onClick={requestAddZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>;
   const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled} onChange={(event) => selectZone(event.target.value || null)}><option value="">Select a zone</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
   const positionFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-x`} label="X" value={selectedZone.x} disabled={!editable} onCommit={(value) => commitField('x', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-y`} label="Y" value={selectedZone.y} disabled={!editable} onCommit={(value) => commitField('y', value)} /></div>;
   const sizeFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-width`} label="Width" value={selectedZone.width} disabled={!editable} onCommit={(value) => commitField('width', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-height`} label="Height" value={selectedZone.height} disabled={!editable} onCommit={(value) => commitField('height', value)} /></div>;
@@ -466,6 +472,7 @@ export default function ZoneMapPanel({
             {toolbarStart || (showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong>{groupId}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
               : <span className="zone-map__model">{microphone.model}</span>)}
             {zoneActions}
+            {toolbarEnd}
             {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : showReferences && <GroupReferenceDropdown groups={otherGroups} checked={references} disabled={!isInteractive} onChange={changeReference} />}
           </div>
           <div className="zone-map__canvas-wrap" ref={mapRef}>

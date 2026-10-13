@@ -28,51 +28,14 @@ function validateName(state, microphoneId, name, exceptId = null) {
   return trimmedName;
 }
 
-function initialName(microphoneId, groupId, index) {
-  if (microphoneId === 'MIC-01' || microphoneId === 'MIC01') {
-    const names = { G1: '全會議室', G2: '訪客座位區', G3: '講台區' };
-    if (names[groupId]) return names[groupId];
-  }
-  if (microphoneId === 'MIC-02' || microphoneId === 'MIC02') {
-    const names = { G4: '討論區', G5: '簡報區' };
-    if (names[groupId]) return names[groupId];
-  }
-  return `區域設定檔 ${index + 1}`;
-}
-
-export function initializeZoneSettings(microphones = [], groups = [], initialMaps = {}) {
-  const settings = [];
+export function initializeZoneSettings(microphones = [], groups = [], _initialMaps = {}) {
   const assignments = {};
   const microphoneIds = new Set(microphones.map((microphone) => microphone.id));
   for (const group of groups) {
     if (!microphoneIds.has(group.microphoneId)) throw new Error('Group 所屬的麥克風不存在。');
+    assignments[group.id] = null;
   }
-
-  for (const microphone of microphones) {
-    const microphoneGroups = groups.filter((group) => group.microphoneId === microphone.id);
-    const sampleOrder = ['G1', 'G3', 'G2'];
-    const orderedGroups = microphone.id === 'MIC-01' || microphone.id === 'MIC01'
-      ? [...microphoneGroups.filter((group) => sampleOrder.includes(group.id))
-        .sort((a, b) => sampleOrder.indexOf(a.id) - sampleOrder.indexOf(b.id)),
-      ...microphoneGroups.filter((group) => !sampleOrder.includes(group.id))]
-      : microphoneGroups;
-    for (const [index, group] of orderedGroups.entries()) {
-      const id = `settings:${encodeURIComponent(microphone.id)}:${encodeURIComponent(group.id)}`;
-      settings.push({
-        id,
-        microphoneId: microphone.id,
-        name: initialName(microphone.id, group.id, index),
-        zones: cloneGeometry(initialMaps[group.id]),
-      });
-      assignments[group.id] = id;
-    }
-    const firstGroup = microphoneGroups.find((group) => group.id === 'G1');
-    const secondGroup = microphoneGroups.find((group) => group.id === 'G2');
-    if ((microphone.id === 'MIC-01' || microphone.id === 'MIC01') && firstGroup && secondGroup) {
-      assignments[secondGroup.id] = assignments[firstGroup.id];
-    }
-  }
-  return { settings, assignments };
+  return { settings: [], assignments };
 }
 
 // Resolve assignments on every render so shared edits reach every connected Group.
@@ -134,6 +97,28 @@ export function removeSettings(state, groups, id, replacementId = null) {
   return {
     ...state,
     settings: state.settings.filter((item) => item.id !== id),
+    assignments,
+  };
+}
+
+export function removeSettingsBatch(state, groups, microphoneId, settingsIds) {
+  if (!Array.isArray(settingsIds) || !settingsIds.length) {
+    throw new Error('請選擇要刪除的設定檔。');
+  }
+  const removedIds = new Set(settingsIds);
+  for (const id of removedIds) {
+    requireSameMicrophone({ microphoneId }, requireSettings(state, id));
+  }
+  // Validate every selection and affected Group before producing the next state.
+  const assignments = { ...state.assignments };
+  for (const [groupId, settingsId] of Object.entries(assignments)) {
+    if (!removedIds.has(settingsId)) continue;
+    requireSameMicrophone(requireGroup(groups, groupId), requireSettings(state, settingsId));
+    assignments[groupId] = null;
+  }
+  return {
+    ...state,
+    settings: state.settings.filter((settings) => !removedIds.has(settings.id)),
     assignments,
   };
 }

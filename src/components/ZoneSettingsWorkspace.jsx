@@ -7,7 +7,7 @@ import { useDialogFocus } from './ChannelConfigureDialog';
 import { getMicrophoneGroups } from './workspaceGeometry';
 import {
   initializeZoneSettings, getSettingsMaps, assignSettings, createSettings,
-  renameSettings, removeSettings, updateSettingsZones,
+  renameSettings, removeSettingsBatch, updateSettingsZones,
 } from './zoneSettingsLibrary';
 import './ZoneSettingsWorkspace.css';
 
@@ -27,21 +27,23 @@ function ActionIcon({ name }) {
   return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-function SettingsActionDialog({ action, settings, usageCount, alternatives, onClose, onConfirm }) {
+function SettingsActionDialog({ action, settings, settingsList, groups, assignments, onClose, onConfirm }) {
   const dialogRef = useRef(null);
   const inputId = useId();
   const titleId = useId();
   const [name, setName] = useState(action.kind === 'rename' ? settings.name
     : action.kind === 'copy' ? `${settings.name.slice(0, 54)} 副本` : '');
-  const [replacementId, setReplacementId] = useState(alternatives[0]?.id || '');
+  const [selectedIds, setSelectedIds] = useState([]);
   const [error, setError] = useState('');
   const titles = { create: '新增設定檔', rename: '重新命名', copy: '建立副本', delete: '刪除設定檔' };
+  const affectedGroups = groups.filter(group => selectedIds.includes(assignments[group.id]));
   useDialogFocus(true, dialogRef, onClose);
 
   const submit = event => {
     event.preventDefault();
     try {
-      onConfirm(action.kind === 'delete' ? replacementId || null : name);
+      if (action.kind === 'delete' && !selectedIds.length) return;
+      onConfirm(action.kind === 'delete' ? selectedIds : name);
     } catch (problem) {
       setError(problem.message);
     }
@@ -56,13 +58,31 @@ function SettingsActionDialog({ action, settings, usageCount, alternatives, onCl
       <form onSubmit={submit}>
         <div className="zone-settings-action-dialog__body">
           {action.kind === 'delete' ? <>
-            <p className="zone-settings-action-dialog__question">刪除「{settings.name}」？</p>
-            {usageCount > 0 ? <label htmlFor={inputId}>目前有 {usageCount} 個 Group 使用，刪除後改用：
-              <select id={inputId} value={replacementId} onChange={event => setReplacementId(event.target.value)} data-initial-focus>
-                {alternatives.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-                <option value="">不使用設定檔</option>
-              </select>
-            </label> : <p className="zone-settings-action-dialog__hint">這項設定檔將從清單移除。</p>}
+            <p className="zone-settings-action-dialog__question">選擇要刪除的設定檔</p>
+            <div className="zone-settings-delete-list">
+              {settingsList.map((item, index) => {
+                const users = groups.filter(group => assignments[group.id] === item.id);
+                return <label className="zone-settings-delete-option" key={item.id}>
+                  <input type="checkbox" aria-label={`刪除 ${item.name}`} checked={selectedIds.includes(item.id)}
+                    data-initial-focus={index === 0 ? '' : undefined}
+                    onChange={event => {
+                      const checked = event.target.checked;
+                      setSelectedIds(previous => checked
+                        ? [...previous, item.id] : previous.filter(id => id !== item.id));
+                      setError('');
+                    }} />
+                  <span className="zone-settings-delete-option__text"><strong>{item.name}</strong>
+                    <span>{users.length ? `使用中：${users.map(group => group.id).join('、')}` : '未使用'}</span>
+                  </span>
+                </label>;
+              })}
+            </div>
+            <p className="zone-settings-delete-impact" aria-live="polite">
+              {!selectedIds.length ? '尚未選擇設定檔。'
+                : affectedGroups.length
+                  ? `已選擇 ${selectedIds.length} 項。刪除後，${affectedGroups.map(group => group.id).join('、')} 將不使用設定檔。`
+                  : `已選擇 ${selectedIds.length} 項，沒有 Group 使用這些設定檔。`}
+            </p>
           </> : <label htmlFor={inputId}>設定檔名稱
             <input id={inputId} value={name} maxLength={60} autoComplete="off" placeholder="輸入名稱"
               onChange={event => { setName(event.target.value); setError(''); }} data-initial-focus />
@@ -70,8 +90,9 @@ function SettingsActionDialog({ action, settings, usageCount, alternatives, onCl
           {error && <p className="zone-settings-action-dialog__error" role="alert">{error}</p>}
         </div>
         <footer><button className="zone-map__button" type="button" onClick={onClose}>取消</button>
-          <button className={`zone-map__button ${action.kind === 'delete' ? 'is-danger' : 'is-primary'}`} type="submit">
-            {action.kind === 'create' ? '建立' : action.kind === 'copy' ? '建立副本' : action.kind === 'delete' ? '刪除' : '確認'}
+          <button className={`zone-map__button ${action.kind === 'delete' ? 'is-danger' : 'is-primary'}`} type="submit"
+            disabled={action.kind === 'delete' && !selectedIds.length}>
+            {action.kind === 'create' ? '建立' : action.kind === 'copy' ? '建立副本' : action.kind === 'delete' ? `刪除 ${selectedIds.length} 項` : '確認'}
           </button></footer>
       </form>
     </section>
@@ -101,9 +122,10 @@ export default function ZoneSettingsWorkspace({
   const menuRef = useRef(null);
   const menuTriggerRef = useRef(null);
   const modalRef = useRef(null);
+  const modalOpenerRef = useRef(null);
+  const previousModalOpenRef = useRef(false);
   const inlineEditorRef = useRef(null);
   const modalEditorRef = useRef(null);
-  const addSettingsRef = useRef(null);
   const previousActionRef = useRef(null);
   const requestTokenRef = useRef(null);
   const nextId = useRef(1);
@@ -132,6 +154,33 @@ export default function ZoneSettingsWorkspace({
   useLayoutEffect(() => () => editorHost.remove(), [editorHost]);
 
   useEffect(() => {
+    const modalClosed = previousModalOpenRef.current && !modalOpen;
+    previousModalOpenRef.current = modalOpen;
+    if (!active) {
+      modalOpenerRef.current = null;
+      return undefined;
+    }
+    if (!modalClosed) return undefined;
+    const opener = modalOpenerRef.current;
+    modalOpenerRef.current = null;
+    let restoreFrame;
+    // The parent first removes Configure's suspended/inert state in response to
+    // onMapOpenChange. Restore after that commit, without stealing valid focus.
+    const waitFrame = requestAnimationFrame(() => {
+      restoreFrame = requestAnimationFrame(() => {
+        const canFocus = element => element instanceof HTMLElement && element.isConnected
+          && element !== document.body && element.getClientRects().length
+          && !element.matches(':disabled') && !element.closest('[inert], [aria-hidden="true"]');
+        if (!canFocus(document.activeElement) && canFocus(opener)) opener.focus();
+      });
+    });
+    return () => {
+      cancelAnimationFrame(waitFrame);
+      if (restoreFrame) cancelAnimationFrame(restoreFrame);
+    };
+  }, [active, modalOpen]);
+
+  useEffect(() => {
     const actionClosed = previousActionRef.current && !action;
     previousActionRef.current = action;
     if (!actionClosed || !active) return undefined;
@@ -140,15 +189,15 @@ export default function ZoneSettingsWorkspace({
       if (focused && focused !== document.body && focused.isConnected
         && focused.getClientRects().length && !focused.matches(':disabled')
         && !focused.closest('[inert]')) return;
-      // Deleting the final setting disables the former Manage trigger, so the
-      // shared dialog hook cannot restore focus to it. Continue at Add instead.
-      const target = [addSettingsRef.current, document.getElementById(settingsSelectId)]
+      const addZone = [...editorHost.querySelectorAll('button')]
+        .find(button => button.textContent.trim() === 'Add Zone');
+      const target = [addZone, menuTriggerRef.current, document.getElementById(settingsSelectId)]
         .find(element => element && !element.disabled && element.getClientRects().length
           && !element.closest('[inert]'));
       target?.focus();
     });
     return () => cancelAnimationFrame(frame);
-  }, [action, active, settingsSelectId]);
+  }, [action, active, settingsSelectId, editorHost]);
 
   useEffect(() => {
     if (!active) closeModal();
@@ -164,6 +213,7 @@ export default function ZoneSettingsWorkspace({
     if (!requestedMicrophone) return;
     const requestedGroup = preferredGroup(groups, requestedMicrophone.id, mapRequest.groupId);
     requestTokenRef.current = mapRequest.token;
+    modalOpenerRef.current = document.activeElement;
     setMicrophoneId(requestedMicrophone.id);
     setLastGroupByMicrophone(previous => ({ ...previous, [requestedMicrophone.id]: requestedGroup?.id }));
     setEntry({ groupId: requestedGroup?.id, pickupMode: mapRequest.pickupMode });
@@ -174,7 +224,7 @@ export default function ZoneSettingsWorkspace({
 
   useEffect(() => {
     if (!menuOpen) return undefined;
-    menuRef.current?.querySelector('[role="menuitem"]')?.focus();
+    menuRef.current?.querySelector('[role="menuitem"]:not(:disabled)')?.focus();
     const outside = event => { if (!menuRef.current?.contains(event.target)) setMenuOpen(false); };
     document.addEventListener('pointerdown', outside);
     return () => document.removeEventListener('pointerdown', outside);
@@ -185,10 +235,11 @@ export default function ZoneSettingsWorkspace({
     setMenuOpen(false);
   };
 
-  const openAction = kind => {
+  const openAction = (kind, addFirstZone = false) => {
     setMenuOpen(false);
-    menuTriggerRef.current?.focus();
+    if (!addFirstZone) menuTriggerRef.current?.focus();
     setAction({ kind, settingsId: settings?.id, groupId: group.id, microphoneId: microphone.id,
+      addFirstZone,
       newId: `custom-${microphone.id}-${Date.now()}-${nextId.current++}` });
   };
 
@@ -197,11 +248,14 @@ export default function ZoneSettingsWorkspace({
     // name conflicts without closing. No separate geometry-save step exists.
     const apply = previous => {
       if (action.kind === 'create' || action.kind === 'copy') {
-        return createSettings(previous, groups, action.groupId, value, action.newId,
+        const created = createSettings(previous, groups, action.groupId, value, action.newId,
           action.kind === 'copy' ? action.settingsId : null);
+        return action.addFirstZone ? updateSettingsZones(created, action.newId, [
+          { id: 'zone-1', name: 'Zone 1', x: 0, y: 0, width: 2, height: 1.5 },
+        ]) : created;
       }
       if (action.kind === 'rename') return renameSettings(previous, action.settingsId, value);
-      return removeSettings(previous, groups, action.settingsId, value);
+      return removeSettingsBatch(previous, groups, action.microphoneId, value);
     };
     apply(library);
     setLibrary(apply);
@@ -222,7 +276,7 @@ export default function ZoneSettingsWorkspace({
   };
 
   const handleMenuKeys = event => {
-    const items = [...menuRef.current.querySelectorAll('[role="menuitem"]')];
+    const items = [...menuRef.current.querySelectorAll('[role="menuitem"]:not(:disabled)')];
     const index = items.indexOf(document.activeElement);
     if (event.key === 'Escape') {
       event.preventDefault(); event.stopPropagation(); setMenuOpen(false); menuTriggerRef.current.focus();
@@ -239,23 +293,24 @@ export default function ZoneSettingsWorkspace({
     <div className="select-field zone-settings-controls__select">
       <select id={settingsSelectId} aria-label="Zone Settings" value={settings?.id || ''} disabled={!enabled}
         onChange={event => { setMenuOpen(false); setLibrary(previous => assignSettings(previous, groups, group.id, event.target.value || null)); }}>
-        {!settings && <option value="">選擇設定檔</option>}
+        {!settings && <option value="">{scopedSettings.length ? '選擇設定檔' : '尚無設定檔'}</option>}
         {scopedSettings.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
       </select><Icon name="chevron" size={16} />
     </div>
-    <button ref={addSettingsRef} className="zone-map__button" type="button" disabled={!enabled} onClick={() => openAction('create')}><Icon name="plus" size={15} />新增</button>
-    <div className="zone-settings-controls__manage" ref={menuRef}>
-      <button ref={menuTriggerRef} className="zone-map__button zone-settings-controls__more" type="button" aria-label="管理目前設定檔"
+  </div>;
+
+  const settingsManagement = <div className="zone-settings-controls__manage" ref={menuRef}>
+      <button ref={menuTriggerRef} className="zone-map__button zone-settings-controls__more" type="button" aria-label="管理設定檔"
         aria-haspopup="menu" aria-expanded={menuOpen} aria-controls={menuOpen ? menuId : undefined}
-        disabled={!enabled || !settings} onClick={() => setMenuOpen(previous => !previous)}
+        disabled={!enabled} onClick={() => setMenuOpen(previous => !previous)}
         onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); setMenuOpen(true); } }}>⋯</button>
       {menuOpen && <div className="zone-settings-menu" id={menuId} role="menu" onKeyDown={handleMenuKeys}>
-        <button type="button" role="menuitem" onClick={() => openAction('rename')}><ActionIcon name="rename" />重新命名</button>
-        <button type="button" role="menuitem" onClick={() => openAction('copy')}><ActionIcon name="copy" />建立副本</button>
-        <button type="button" role="menuitem" className="is-danger" onClick={() => openAction('delete')}><ActionIcon name="delete" />刪除設定檔</button>
+        <button type="button" role="menuitem" onClick={() => openAction('create')}><Icon name="plus" size={17} />新增設定檔</button>
+        <button type="button" role="menuitem" disabled={!settings} onClick={() => openAction('rename')}><ActionIcon name="rename" />重新命名</button>
+        <button type="button" role="menuitem" disabled={!settings} onClick={() => openAction('copy')}><ActionIcon name="copy" />建立副本</button>
+        <button type="button" role="menuitem" className="is-danger" disabled={!scopedSettings.length} onClick={() => openAction('delete')}><ActionIcon name="delete" />刪除設定檔</button>
       </div>}
-    </div>
-  </div>;
+    </div>;
 
   const navigation = <div className="zone-settings-navigation" hidden={!active || (!visible && !modalOpen)}>
     <header><label htmlFor={microphoneSelectId}>Select microphone</label>
@@ -268,14 +323,18 @@ export default function ZoneSettingsWorkspace({
       maps={maps} currentGroupId={group?.id} active={active && (visible || modalOpen)} onSelectGroup={selectGroup} onToggleGroup={onToggleGroup} />
   </div>;
 
-  const editor = group && microphone ? <ZoneMapPanel compactSettings toolbarStart={settingsControls}
+  const editor = group && microphone ? <ZoneMapPanel compactSettings toolbarStart={settingsControls} toolbarEnd={settingsManagement}
     groupId={group.id} groups={scopedGroups} microphone={microphone} maps={maps} onMapsChange={updateMaps}
     mapIdentity={`${microphone.id}/${group.id}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
+    onAddZoneWithoutSettings={!settings ? () => openAction('create', true) : undefined}
     enabled={enabled} active={active && (visible || modalOpen) && !action}
-    emptyMessage={!settings ? '選擇或新增設定檔以設定範圍' : undefined} /> : <p className="zone-settings-empty">No camera groups connected.</p>;
+    emptyMessage={!settings ? scopedSettings.length
+      ? '選擇設定檔，或按 Add Zone 建立新的設定檔與範圍'
+      : '按 Add Zone 建立第一個設定檔與範圍' : undefined} /> : <p className="zone-settings-empty">No camera groups connected.</p>;
 
   const actionSettings = action && library.settings.find(item => item.id === action.settingsId);
-  const actionAlternatives = action ? library.settings.filter(item => item.microphoneId === action.microphoneId && item.id !== action.settingsId) : [];
+  const actionSettingsList = action ? library.settings.filter(item => item.microphoneId === action.microphoneId) : [];
+  const actionGroups = action ? getMicrophoneGroups(groups, action.microphoneId) : [];
 
   return <>
     <section className="zone-settings-workspace" aria-label="區域設定檔工作區" hidden={!showWorkspace}>
@@ -291,7 +350,7 @@ export default function ZoneSettingsWorkspace({
     </div>, document.body)}
     {createPortal(editor, editorHost)}
     {active && action && <SettingsActionDialog key={`${action.kind}/${action.settingsId || 'new'}`} action={action} settings={actionSettings}
-      alternatives={actionAlternatives} usageCount={Object.values(library.assignments).filter(id => id === action.settingsId).length}
+      settingsList={actionSettingsList} groups={actionGroups} assignments={library.assignments}
       onClose={() => setAction(null)} onConfirm={confirmAction} />}
   </>;
 }
