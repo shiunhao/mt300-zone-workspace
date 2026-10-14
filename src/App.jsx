@@ -332,7 +332,7 @@ export default function App() {
           <section className="group-detail" aria-label="Zone settings library">
             <ZoneSettingsWorkspace microphones={SETUP_MICROPHONES}
               groups={settingsGroups.map((group) => ({ ...group, pickupMode: configurations.settings[group.id].pickupMode }))}
-              initialMaps={SETUP_MAPS} preferredGroupId={selectedSettingsGroupId} mapRequest={settingsMapRequest}
+              initialMaps={SETUP_MAPS} mapRequest={settingsMapRequest}
               sidebarTarget={settingsSidebar} visible={showZoneSettings && showMicrophoneZones} active={showZoneSettings && !showFeedback}
               onToggleGroup={toggleSettingsGroup} onMapOpenChange={setSettingsMapOpen} />
           </section>

@@ -11,13 +11,6 @@ import {
 } from './zoneSettingsLibrary';
 import './ZoneSettingsWorkspace.css';
 
-function preferredGroup(groups, microphoneId, remembered, preferred) {
-  const scoped = getMicrophoneGroups(groups, microphoneId);
-  return scoped.find(group => group.id === remembered)
-    || scoped.find(group => group.id === preferred)
-    || scoped.find(group => group.enabled !== false) || scoped[0];
-}
-
 function ActionIcon({ name }) {
   const paths = {
     rename: <path d="m4 16 12-12 4 4-12 12-5 1zM14 6l4 4" />,
@@ -101,7 +94,7 @@ function SettingsActionDialog({ action, settings, settingsList, groups, assignme
 
 export default function ZoneSettingsWorkspace({
   microphones = [], groups = [], active = true, visible = true, initialMaps,
-  preferredGroupId, mapRequest, sidebarTarget, onToggleGroup, onMapOpenChange,
+  mapRequest, sidebarTarget, onToggleGroup, onMapOpenChange,
 }) {
   const microphoneSelectId = useId();
   const settingsSelectId = useId();
@@ -131,8 +124,8 @@ export default function ZoneSettingsWorkspace({
   const nextId = useRef(1);
   const microphone = microphones.find(item => item.id === microphoneId) || microphones[0];
   const scopedGroups = getMicrophoneGroups(groups, microphone?.id);
-  const group = preferredGroup(groups, microphone?.id, lastGroupByMicrophone[microphone?.id], preferredGroupId);
-  const settingsId = library.assignments[group?.id];
+  const group = scopedGroups.find(item => item.id === lastGroupByMicrophone[microphone?.id]);
+  const settingsId = group ? library.assignments[group.id] : null;
   const settings = library.settings.find(item => item.id === settingsId);
   const scopedSettings = library.settings.filter(item => item.microphoneId === microphone?.id);
   const maps = useMemo(() => getSettingsMaps(library, groups), [library, groups]);
@@ -211,12 +204,14 @@ export default function ZoneSettingsWorkspace({
     if (!active || !mapRequest || mapRequest.token === requestTokenRef.current) return;
     const requestedMicrophone = microphones.find(item => item.id === mapRequest.microphoneId);
     if (!requestedMicrophone) return;
-    const requestedGroup = preferredGroup(groups, requestedMicrophone.id, mapRequest.groupId);
+    const requestedGroup = getMicrophoneGroups(groups, requestedMicrophone.id)
+      .find(item => item.id === mapRequest.groupId);
+    if (!requestedGroup) return;
     requestTokenRef.current = mapRequest.token;
     modalOpenerRef.current = document.activeElement;
     setMicrophoneId(requestedMicrophone.id);
-    setLastGroupByMicrophone(previous => ({ ...previous, [requestedMicrophone.id]: requestedGroup?.id }));
-    setEntry({ groupId: requestedGroup?.id, pickupMode: mapRequest.pickupMode });
+    setLastGroupByMicrophone(previous => ({ ...previous, [requestedMicrophone.id]: requestedGroup.id }));
+    setEntry({ groupId: requestedGroup.id, pickupMode: mapRequest.pickupMode });
     setAction(null);
     setMenuOpen(false);
     setModalOpen(true);
@@ -231,11 +226,13 @@ export default function ZoneSettingsWorkspace({
   }, [menuOpen]);
 
   const selectGroup = id => {
+    if (!microphone || !scopedGroups.some(item => item.id === id)) return;
     setLastGroupByMicrophone(previous => ({ ...previous, [microphone.id]: id }));
     setMenuOpen(false);
   };
 
   const openAction = (kind, addFirstZone = false) => {
+    if (!group || !enabled) return;
     setMenuOpen(false);
     if (!addFirstZone) menuTriggerRef.current?.focus();
     setAction({ kind, settingsId: settings?.id, groupId: group.id, microphoneId: microphone.id,
@@ -263,7 +260,7 @@ export default function ZoneSettingsWorkspace({
   };
 
   const updateMaps = updater => {
-    if (!settings || !enabled) return;
+    if (!group || !settings || !enabled) return;
     const editingSettingsId = settings.id;
     const editingGroupId = group.id;
     setLibrary(previous => {
@@ -291,8 +288,12 @@ export default function ZoneSettingsWorkspace({
   const settingsControls = <div className="zone-settings-controls">
     <label htmlFor={settingsSelectId}>Zone Settings</label>
     <div className="select-field zone-settings-controls__select">
-      <select id={settingsSelectId} aria-label="Zone Settings" value={settings?.id || ''} disabled={!enabled}
-        onChange={event => { setMenuOpen(false); setLibrary(previous => assignSettings(previous, groups, group.id, event.target.value || null)); }}>
+      <select id={settingsSelectId} aria-label="Zone Settings" value={settings?.id || ''} disabled={!group || !enabled}
+        onChange={event => {
+          if (!group || !enabled) return;
+          setMenuOpen(false);
+          setLibrary(previous => assignSettings(previous, groups, group.id, event.target.value || null));
+        }}>
         {!settings && <option value="">{scopedSettings.length ? '選擇設定檔' : '尚無設定檔'}</option>}
         {scopedSettings.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
       </select><Icon name="chevron" size={16} />
@@ -302,7 +303,7 @@ export default function ZoneSettingsWorkspace({
   const settingsManagement = <div className="zone-settings-controls__manage" ref={menuRef}>
       <button ref={menuTriggerRef} className="zone-map__button zone-settings-controls__more" type="button" aria-label="管理設定檔"
         aria-haspopup="menu" aria-expanded={menuOpen} aria-controls={menuOpen ? menuId : undefined}
-        disabled={!enabled} onClick={() => setMenuOpen(previous => !previous)}
+        disabled={!group || !enabled} onClick={() => setMenuOpen(previous => !previous)}
         onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); setMenuOpen(true); } }}>⋯</button>
       {menuOpen && <div className="zone-settings-menu" id={menuId} role="menu" onKeyDown={handleMenuKeys}>
         <button type="button" role="menuitem" onClick={() => openAction('create')}><Icon name="plus" size={17} />新增設定檔</button>
@@ -323,14 +324,14 @@ export default function ZoneSettingsWorkspace({
       maps={maps} currentGroupId={group?.id} active={active && (visible || modalOpen)} onSelectGroup={selectGroup} onToggleGroup={onToggleGroup} />
   </div>;
 
-  const editor = group && microphone ? <ZoneMapPanel compactSettings toolbarStart={settingsControls} toolbarEnd={settingsManagement}
-    groupId={group.id} groups={scopedGroups} microphone={microphone} maps={maps} onMapsChange={updateMaps}
-    mapIdentity={`${microphone.id}/${group.id}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
-    onAddZoneWithoutSettings={!settings ? () => openAction('create', true) : undefined}
-    enabled={enabled} active={active && (visible || modalOpen) && !action}
-    emptyMessage={!settings ? scopedSettings.length
+  const editor = microphone ? <ZoneMapPanel compactSettings toolbarStart={settingsControls} toolbarEnd={settingsManagement}
+    groupId={group?.id ?? null} groupSelected={Boolean(group)} groups={scopedGroups} microphone={microphone} maps={maps} onMapsChange={updateMaps}
+    mapIdentity={`${microphone.id}/${group?.id ?? 'none'}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
+    onAddZoneWithoutSettings={group && !settings ? () => openAction('create', true) : undefined}
+    enabled={!group || enabled} active={active && (visible || modalOpen) && !action}
+    emptyMessage={!scopedGroups.length ? 'No camera groups connected.' : !group ? 'Select a group to start' : !settings ? scopedSettings.length
       ? '選擇設定檔，或按 Add Zone 建立新的設定檔與範圍'
-      : '按 Add Zone 建立第一個設定檔與範圍' : undefined} /> : <p className="zone-settings-empty">No camera groups connected.</p>;
+      : '按 Add Zone 建立第一個設定檔與範圍' : undefined} /> : <p className="zone-settings-empty">No microphones connected.</p>;
 
   const actionSettings = action && library.settings.find(item => item.id === action.settingsId);
   const actionSettingsList = action ? library.settings.filter(item => item.microphoneId === action.microphoneId) : [];

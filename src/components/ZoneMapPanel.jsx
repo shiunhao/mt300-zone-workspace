@@ -138,7 +138,7 @@ export default function ZoneMapPanel({
   selectedZoneId = null, onSelectedZoneChange, showReferences = true,
   microphone = WORKSPACE_MICROPHONE, showGroupContext = false,
   compactSettings = false, toolbarStart, toolbarEnd, mapIdentity, readOnly = false, emptyMessage,
-  onAddZoneWithoutSettings,
+  onAddZoneWithoutSettings, groupSelected = true,
 }) {
   const isWorkspace = variant === 'workspace';
   const isOverview = isWorkspace && overview;
@@ -169,7 +169,7 @@ export default function ZoneMapPanel({
   const selectionKey = mapIdentity || groupId;
   const mapContext = `${variant}/${groupId}/${mapIdentity || ''}/${isOverview ? 'overview' : 'edit'}`;
   const currentZones = availableMaps[groupId] || [];
-  const canEdit = !readOnly && !isOverview && (!isWorkspace || currentGroup.enabled !== false);
+  const canEdit = groupSelected && !readOnly && !isOverview && (!isWorkspace || currentGroup.enabled !== false);
   const editable = isInteractive && canEdit;
   const activePreview = dragPreview?.context === mapContext ? dragPreview : null;
   const displayZones = activePreview ? currentZones.map((zone) => zone.id === activePreview.zone.id ? activePreview.zone : zone) : currentZones;
@@ -457,15 +457,15 @@ export default function ZoneMapPanel({
     </g>;
   }
 
-  const canAddZone = editable || (isInteractive && readOnly && Boolean(onAddZoneWithoutSettings));
+  const canAddZone = editable || (isInteractive && groupSelected && readOnly && Boolean(onAddZoneWithoutSettings));
   const zoneActions = <div className="zone-map__zone-actions"><button type="button" className="zone-map__button" disabled={!canAddZone} onClick={requestAddZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>;
-  const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled} onChange={(event) => selectZone(event.target.value || null)}><option value="">Select a zone</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
+  const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled || !groupSelected} onChange={(event) => selectZone(event.target.value || null)}><option value="">Select a zone</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
   const positionFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-x`} label="X" value={selectedZone.x} disabled={!editable} onCommit={(value) => commitField('x', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-y`} label="Y" value={selectedZone.y} disabled={!editable} onCommit={(value) => commitField('y', value)} /></div>;
   const sizeFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-width`} label="Width" value={selectedZone.width} disabled={!editable} onCommit={(value) => commitField('width', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-height`} label="Height" value={selectedZone.height} disabled={!editable} onCommit={(value) => commitField('height', value)} /></div>;
-  const selectionHint = <p className="zone-map__helper zone-map__no-selection">{currentZones.length ? `Select a zone on the map to ${canEdit ? 'edit' : 'view'} its position and size.` : canEdit ? 'Add a zone to edit its position and size.' : 'No zones in this map.'}</p>;
+  const selectionHint = <p className="zone-map__helper zone-map__no-selection">{!groupSelected ? 'Select a group to view its zones.' : currentZones.length ? `Select a zone on the map to ${canEdit ? 'edit' : 'view'} its position and size.` : canEdit ? 'Add a zone to edit its position and size.' : 'No zones in this map.'}</p>;
 
   return (
-    <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : `${groupId} zone map`} aria-disabled={!enabled} inert={enabled ? undefined : ''}>
+    <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : groupSelected ? `${groupId} zone map` : 'Microphone zone map'} aria-disabled={!enabled} inert={enabled ? undefined : ''}>
       <div className="zone-map__layout">
         <div className="zone-map__main">
           <div className="zone-map__toolbar">
