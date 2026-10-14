@@ -24,6 +24,8 @@ npm run build
 - Channel 顯示 8 列 Microphone／Camera／Human tracking／Remarks；可選 Preset、編輯備註、搜尋。
 - Profile、Output Layout、Position view 保留截圖中的選項。
 - Channel Configure 提供 Lobe／Coverage／Talker Position 與對應欄位，Map Setting 依版本進入分頁或設定視窗。
+- V1～V5 共用可操作的 Manual Mode Settings：左側 Output Layout 支援 Single、Side-by-side、Main Speaker (3-inputs)、Main Speaker (4-inputs)、PIP、Quad View。Quad View 為 2×2 四格；右側依布局顯示 1／2／3／4／2／4 列 Camera、Preset、Human tracking 與 Set preset。點選預覽格子可定位對應列，切換布局保留暫時隱藏列的設定。Human tracking 依參考圖呈現停用的 Off。Manual、Auto、Microphone Zones 可用方向鍵及 Home／End 切換，切換版本與回饋頁保留 Manual 的布局與攝影機配置。
+- Manual 的 Set preset 進入完整設定頁：攝影機名稱與 Back 在頂部，左側為辦公室靜態預覽，右側為 PTZ、AF／手動對焦、Zoom 及 Preset setting。Preset 編號為 0～254，每頁九格，共 29 頁，最後一頁為 252～254；翻頁預選新頁第一格。Save 只儲存該攝影機與編號的 PTZ／對焦設定，停留在設定頁，Back 返回後不會自動更改輸出列使用的 Preset。表格選取已儲存編號可在原型中套用該位置；右側攝影機控制視窗與設定頁共用每台攝影機狀態。所有資料只保留本次開啟頁面，重新整理重置。預覽圖由內建 image_gen 生成，圖檔與完整提示見 `src/assets/office-empty-desk.png`、`src/assets/office-preview.md`，未連線實際攝影機。
 - 右上角懸浮 Design version 選單可即時切換 V1 Independent Group Maps、V2 Map Setting Dialog、V3 Group Previews、V4 Microphone Setup、V5 Zone Settings Library；V2／V3／V4／V5 Zone Map 視窗開啟時隱藏選單，關閉後恢復。
 - 預覽初始進入 V5 Microphone Zones 畫面，Auto Mode Settings 與 Manual Mode Settings 保留在同一層；切回 V4 時仍可檢視原有 Auto Mode Group／Channel 畫面及 Microphone Zones 上層頁籤。V2／V3／V4／V5 的 Auto Mode 保留 Channel／Active Position 兩個子分頁。V3 的按鈕依序為 Channel Configure、Zone Map、Time，直接開啟 Group Previews 設定視窗，關閉後回到 Channel 並保留地圖設定。V2 Zone Map 入口位於 Channel Configure 的 Talker Position 設定內。V1 保留 Zone Map 子分頁。
 - 版本選單沿用 S311／TR615 的緊湊選單形式，位於 Help／X 下方，不占用原有按鈕的位置。
@@ -47,7 +49,7 @@ npm run build
 - Zone Map 整張格子地圖為 51 × 51 格。按住空白格拖曳可平移地圖；拖曳 Zone 移動區域，點擊空白處解除選取。平移只改變視角，不修改座標或尺寸。
 - 地圖內右下角懸浮工具框提供 View／百分比、置中、縮小、放大與 Coordinates。Zone Map 滾輪及按鈕縮放限制為 25%～150%，Active Position 維持 25%～125%；置中同時清除平移並恢復 100%，不修改 Zone 幾何資料。
 - 切換分頁、Group 與設計版本保留本次開啟頁面的地圖資料；重新整理會還原展示資料。
-- 導覽、Manual Mode、Group 新增、Time、Re-configure、Help 與 Close settings 仍保留外觀。
+- 導覽、Group 新增、Time、Re-configure、Help 與 Close settings 仍保留外觀。
 - 所有設定只影響本機原型；未連線到 MT300。51 × 51 格由使用者指定；每格延續原型 0.5 m 的比例（整張 25.5 × 25.5 m）、MIC-01、矩形 Zones 及 mic 中心原點仍為預覽假設，待設備規格確認。100% 延續原有顯示比例，整張地圖的邊緣可透過平移查看。
 
 樣式變數位於 `src/index.css`，地圖元件位於 `src/components/PositionMap.jsx`。

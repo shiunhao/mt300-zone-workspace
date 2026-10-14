@@ -9,6 +9,7 @@ import MapSettingDialog from './components/MapSettingDialog.jsx'
 import UserFeedbackPage from './components/UserFeedbackPage.jsx'
 import MicrophoneSetup from './components/MicrophoneSetup.jsx'
 import ZoneSettingsWorkspace from './components/ZoneSettingsWorkspace.jsx'
+import ManualModeSettings from './components/ManualModeSettings.jsx'
 import { WORKSPACE_MICROPHONE } from './components/workspaceGeometry.js'
 import { SETUP_MICROPHONES, SETUP_GROUPS, SETUP_MAPS } from './components/microphoneSetupData.js'
 
@@ -95,6 +96,7 @@ export default function App() {
   const [setupMapRequest, setSetupMapRequest] = useState(null)
   const [microphoneSidebar, setMicrophoneSidebar] = useState(null)
   const [settingsMapOpen, setSettingsMapOpen] = useState(false)
+  const [manualDialogOpen, setManualDialogOpen] = useState(false)
   const [settingsMapRequest, setSettingsMapRequest] = useState(null)
   const [settingsSidebar, setSettingsSidebar] = useState(null)
   const [mapEntryMode, setMapEntryMode] = useState('Talker Position')
@@ -110,6 +112,9 @@ export default function App() {
   const selectedGroup = viewGroups.find((group) => group.id === currentGroupId)
   const selectedDetailTab = detailTabsByVersion[designVersion]
   const showMicrophoneZones = isMicrophoneVersion && settingsPage === 'microphones'
+  const showManualSettings = settingsPage === 'manual'
+  const showAutoSettings = !showMicrophoneZones && !showManualSettings
+  const settingsTabs = isMicrophoneVersion ? ['auto', 'manual', 'microphones'] : ['auto', 'manual']
   const detailTabs = designVersion === 'reference' ? ['channel', 'position', 'zone'] : ['channel', 'position']
   const tabTrack = designVersion === 'reference' ? detailTabTracks[selectedDetailTab] : { start: selectedDetailTab === 'position' ? '50%' : '0%', width: '50%' }
   const configuration = configurations[designVersion][currentGroupId]
@@ -125,8 +130,12 @@ export default function App() {
     }
     setShowFeedback(false)
     setDesignVersion(version)
-    if (version === 'settings' && version !== designVersion) {
-      setSettingsPagesByVersion((current) => ({ ...current, settings: 'microphones' }))
+    if (version !== designVersion) {
+      if (showManualSettings) {
+        setSettingsPagesByVersion((current) => ({ ...current, [version]: 'manual' }))
+      } else if (version === 'settings') {
+        setSettingsPagesByVersion((current) => ({ ...current, settings: 'microphones' }))
+      }
     }
     if (version !== designVersion) setChannelSearch('')
   }
@@ -195,17 +204,19 @@ export default function App() {
   }
 
   const handleSettingsTabKeyDown = (event) => {
-    if (!isMicrophoneVersion || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
-    const nextPage = event.key === 'Home' ? 'auto' : event.key === 'End' ? 'microphones'
-      : showMicrophoneZones ? 'auto' : 'microphones'
+    const currentIndex = settingsTabs.indexOf(settingsPage)
+    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? settingsTabs.length - 1
+      : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + settingsTabs.length) % settingsTabs.length
+    const nextPage = settingsTabs[nextIndex]
     setSettingsPage(nextPage)
-    document.getElementById(nextPage === 'auto' ? 'auto-tab' : 'microphones-tab')?.focus()
+    document.getElementById(`${nextPage}-tab`)?.focus()
   }
 
   return (
     <div className={`settings-shell design-${designVersion}${showFeedback ? ' is-feedback-page' : ''}`}>
-      <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={(usesMapDialog && mapSettingOpen) || (!showFeedback && ((showMicrophoneSetup && setupMapOpen) || (showZoneSettings && settingsMapOpen)))} />
+      <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={manualDialogOpen || (usesMapDialog && mapSettingOpen) || (!showFeedback && ((showMicrophoneSetup && setupMapOpen) || (showZoneSettings && settingsMapOpen)))} />
       <aside className="sidebar" aria-label="Main navigation" hidden={showFeedback}>
         <div className="product-name"><Icon name="device" size={26} /><span>MT300</span></div>
         <nav>
@@ -227,18 +238,21 @@ export default function App() {
         </header>
 
         <div className="mode-tabs" role="tablist" aria-label="Mode settings" hidden={showFeedback}>
-          <button className={`mode-tab${!showMicrophoneZones ? ' is-active' : ''}`} id="auto-tab" type="button" role="tab"
-            aria-selected={!showMicrophoneZones} aria-controls="auto-settings" tabIndex={showMicrophoneZones ? -1 : 0}
+          <button className={`mode-tab${showAutoSettings ? ' is-active' : ''}`} id="auto-tab" type="button" role="tab"
+            aria-selected={showAutoSettings} aria-controls="auto-settings" tabIndex={showAutoSettings ? 0 : -1}
             onClick={() => setSettingsPage('auto')} onKeyDown={handleSettingsTabKeyDown}>Auto Mode Settings</button>
-          <button className="mode-tab" type="button" role="tab" aria-selected="false" tabIndex={-1}>Manual Mode Settings</button>
+          <button className={`mode-tab${showManualSettings ? ' is-active' : ''}`} id="manual-tab" type="button" role="tab"
+            aria-selected={showManualSettings} aria-controls="manual-settings" tabIndex={showManualSettings ? 0 : -1}
+            onClick={() => setSettingsPage('manual')} onKeyDown={handleSettingsTabKeyDown}>Manual Mode Settings</button>
           {isMicrophoneVersion && <button className={`mode-tab${showMicrophoneZones ? ' is-active' : ''}`} id="microphones-tab" type="button" role="tab"
             aria-selected={showMicrophoneZones} aria-controls={showZoneSettings ? 'zone-settings-library' : 'microphones-settings'} tabIndex={showMicrophoneZones ? 0 : -1}
             onClick={() => setSettingsPage('microphones')} onKeyDown={handleSettingsTabKeyDown}>Microphone Zones</button>}
         </div>
 
         <UserFeedbackPage active={showFeedback} />
+        <ManualModeSettings visible={!showFeedback && showManualSettings} onDialogOpenChange={setManualDialogOpen} />
 
-        <section className="workspace" id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback || showMicrophoneZones}>
+        <section className="workspace" id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback || !showAutoSettings}>
           <aside className="group-panel" aria-label="Group settings">
             <div className="output-layout">
               <label htmlFor="output-layout">Select Output Layout</label>
@@ -307,7 +321,7 @@ export default function App() {
                 <button className="button" type="button" onClick={openConfigure}>Channel Configure</button>
               </div>}
               <div key="reference" hidden={designVersion !== 'reference' || configuration.pickupMode !== 'Talker Position'}>
-                <ZoneMapPanel variant="reference" groupId={selectedGroup.id} groups={groups} enabled={selectedGroup.enabled} active={!showFeedback && selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
+                <ZoneMapPanel variant="reference" groupId={selectedGroup.id} groups={groups} enabled={selectedGroup.enabled} active={!showFeedback && showAutoSettings && selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
               </div>
             </div>
           </section>
@@ -321,7 +335,7 @@ export default function App() {
             <MicrophoneSetup microphones={SETUP_MICROPHONES}
               groups={setupGroups.map((group) => ({ ...group, pickupMode: configurations.microphones[group.id].pickupMode }))}
               initialMaps={SETUP_MAPS} preferredGroupId={selectedSetupGroupId} mapRequest={setupMapRequest}
-              sidebarTarget={microphoneSidebar} visible={showMicrophoneSetup && showMicrophoneZones} active={showMicrophoneSetup && !showFeedback}
+              sidebarTarget={microphoneSidebar} visible={showMicrophoneSetup && showMicrophoneZones} active={showMicrophoneSetup && !showFeedback && !showManualSettings}
               onToggleGroup={toggleSetupGroup} onMapOpenChange={setSetupMapOpen} />
           </section>
         </section>
@@ -333,7 +347,7 @@ export default function App() {
             <ZoneSettingsWorkspace microphones={SETUP_MICROPHONES}
               groups={settingsGroups.map((group) => ({ ...group, pickupMode: configurations.settings[group.id].pickupMode }))}
               initialMaps={SETUP_MAPS} mapRequest={settingsMapRequest}
-              sidebarTarget={settingsSidebar} visible={showZoneSettings && showMicrophoneZones} active={showZoneSettings && !showFeedback}
+              sidebarTarget={settingsSidebar} visible={showZoneSettings && showMicrophoneZones} active={showZoneSettings && !showFeedback && !showManualSettings}
               onToggleGroup={toggleSettingsGroup} onMapOpenChange={setSettingsMapOpen} />
           </section>
         </section>
