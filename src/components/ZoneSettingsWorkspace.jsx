@@ -333,11 +333,11 @@ export default function ZoneSettingsWorkspace({
     mapIdentity={`${microphone.id}/${group?.id ?? 'none'}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
     onAddZoneWithoutSettings={group && !settings ? () => openAction('create', true) : undefined}
     enabled={!group || enabled} active={active && (visible || modalOpen) && !action}
-    disabledMessage={group?.enabled === false ? `Turn on ${group.id} in the left panel to edit zones.`
-      : group && !enabled ? 'Select Talker Position in Channel Configure to edit zones.' : undefined}
-    emptyMessage={!scopedGroups.length ? 'No camera groups connected.' : !group ? 'Select a group to start' : !settings ? scopedSettings.length
-      ? '選擇設定檔，或按 Add Zone 建立新的設定檔與範圍'
-      : '按 Add Zone 建立第一個設定檔與範圍' : undefined} /> : <p className="zone-settings-empty">No microphones connected.</p>;
+    disabledMessage={group?.enabled === false ? `請先開啟左側的 ${group.id} 群組開關，再編輯區域。`
+      : group && !enabled ? '請在 Channel Configure 中選擇 Talker Position，再編輯區域。' : undefined}
+    emptyMessage={!scopedGroups.length ? '此麥克風尚未連接攝影機群組。' : !group ? '請先從左側選擇群組，開始設定區域。' : !settings ? scopedSettings.length
+      ? '請選擇設定檔，或按 Add Zone 建立新的設定檔與區域。'
+      : '請按 Add Zone，建立設定檔與第一個區域。' : undefined} /> : <p className="zone-settings-empty">尚未連接麥克風。</p>;
 
   const actionSettings = action && library.settings.find(item => item.id === action.settingsId);
   const actionSettingsList = action ? library.settings.filter(item => item.microphoneId === action.microphoneId) : [];

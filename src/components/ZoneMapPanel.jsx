@@ -459,11 +459,14 @@ export default function ZoneMapPanel({
 
   const canAddZone = editable || (isInteractive && groupSelected && readOnly && Boolean(onAddZoneWithoutSettings));
   const zoneActions = <div className="zone-map__zone-actions"><button type="button" className="zone-map__button" disabled={!canAddZone} onClick={requestAddZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>;
-  const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled || !groupSelected} onChange={(event) => selectZone(event.target.value || null)}><option value="">Select a zone</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
+  const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled || !groupSelected} onChange={(event) => selectZone(event.target.value || null)}><option value="">{compactSettings ? '請選擇區域' : 'Select a zone'}</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
   const positionFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-x`} label="X" value={selectedZone.x} disabled={!editable} onCommit={(value) => commitField('x', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-y`} label="Y" value={selectedZone.y} disabled={!editable} onCommit={(value) => commitField('y', value)} /></div>;
   const sizeFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-width`} label="Width" value={selectedZone.width} disabled={!editable} onCommit={(value) => commitField('width', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-height`} label="Height" value={selectedZone.height} disabled={!editable} onCommit={(value) => commitField('height', value)} /></div>;
-  const selectionHint = <p className="zone-map__helper zone-map__no-selection">{!groupSelected ? 'Select a group to view its zones.' : currentZones.length ? `Select a zone on the map to ${canEdit ? 'edit' : 'view'} its position and size.` : canEdit ? 'Add a zone to edit its position and size.' : 'No zones in this map.'}</p>;
-  const notice = !enabled && disabledMessage ? disabledMessage : !hasVisibleZones ? emptyMessage || 'No zones yet' : null;
+  const selectionHintText = compactSettings
+    ? !groupSelected ? '請先選擇群組以查看區域。' : currentZones.length ? `請在地圖上選擇區域，以${canEdit ? '編輯' : '查看'}位置與尺寸。` : canEdit ? '請新增區域以編輯位置與尺寸。' : '目前尚未設定區域。'
+    : !groupSelected ? 'Select a group to view its zones.' : currentZones.length ? `Select a zone on the map to ${canEdit ? 'edit' : 'view'} its position and size.` : canEdit ? 'Add a zone to edit its position and size.' : 'No zones in this map.';
+  const selectionHint = <p className="zone-map__helper zone-map__no-selection">{selectionHintText}</p>;
+  const notice = !enabled && disabledMessage ? disabledMessage : !hasVisibleZones ? emptyMessage || (compactSettings ? '尚未新增區域' : 'No zones yet') : null;
 
   return (
     <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : groupSelected ? `${groupId} zone map` : 'Microphone zone map'} aria-disabled={!enabled} inert={enabled || compactSettings ? undefined : ''}>
@@ -490,7 +493,7 @@ export default function ZoneMapPanel({
               {isOverview ? visibleGroups.flatMap((group) => (availableMaps[group.id] || []).map((zone) => renderZone(zone, group))) : displayZones.map((zone) => renderZone(zone))}
               <g className="zone-map__mic" transform={`translate(${ORIGIN} ${ORIGIN})`} pointerEvents="none"><rect x="-18" y="-18" width="36" height="36" rx="5" /><rect x="-10" y="-10" width="20" height="20" rx="2" /><path d="M-5 -5h10M-5 0h10M-5 5h10" /><text x="26" y="24">{compactSettings ? '(0, 0)' : `${microphone.id} · (0, 0)`}</text></g>
             </svg>
-            {notice && <div className={`zone-map__empty${!enabled && disabledMessage ? ' is-warning' : ''}`} role={compactSettings ? 'status' : undefined}>{notice}{canEdit && (enabled || !compactSettings) && <span>Add a zone to define the coverage area.</span>}</div>}
+            {notice && <div className={`zone-map__empty${!enabled && disabledMessage ? ' is-warning' : ''}`} role={compactSettings ? 'status' : undefined}>{notice}{canEdit && (enabled || !compactSettings) && <span>{compactSettings ? '按 Add Zone 新增區域，設定收音範圍。' : 'Add a zone to define the coverage area.'}</span>}</div>}
             <MapViewControls zoom={zoom} onReset={resetView} onZoomIn={zoomIn} onZoomOut={zoomOut} disabled={!enabled} label="Zone map" maxZoom={150} />
           </div>
         </div>

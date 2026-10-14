@@ -10,22 +10,22 @@ const versions = [
   },
   {
     value: 'dialog',
-    code: 'V3',
+    code: 'V2',
     label: 'Map Setting Dialog',
   },
   {
     value: 'previews',
-    code: 'V4',
+    code: 'V3',
     label: 'Group Previews',
   },
   {
     value: 'microphones',
-    code: 'V5',
+    code: 'V4',
     label: 'Microphone Setup',
   },
   {
     value: 'settings',
-    code: 'V6',
+    code: 'V5',
     label: 'Zone Settings Library',
   },
   {
