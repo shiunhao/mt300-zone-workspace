@@ -225,6 +225,10 @@ export default function ZoneSettingsWorkspace({
     return () => document.removeEventListener('pointerdown', outside);
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!enabled) setMenuOpen(false);
+  }, [enabled]);
+
   const selectGroup = id => {
     if (!microphone || !scopedGroups.some(item => item.id === id)) return;
     setLastGroupByMicrophone(previous => ({ ...previous, [microphone.id]: id }));
@@ -329,6 +333,8 @@ export default function ZoneSettingsWorkspace({
     mapIdentity={`${microphone.id}/${group?.id ?? 'none'}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
     onAddZoneWithoutSettings={group && !settings ? () => openAction('create', true) : undefined}
     enabled={!group || enabled} active={active && (visible || modalOpen) && !action}
+    disabledMessage={group?.enabled === false ? `Turn on ${group.id} in the left panel to edit zones.`
+      : group && !enabled ? 'Select Talker Position in Channel Configure to edit zones.' : undefined}
     emptyMessage={!scopedGroups.length ? 'No camera groups connected.' : !group ? 'Select a group to start' : !settings ? scopedSettings.length
       ? '選擇設定檔，或按 Add Zone 建立新的設定檔與範圍'
       : '按 Add Zone 建立第一個設定檔與範圍' : undefined} /> : <p className="zone-settings-empty">No microphones connected.</p>;
