@@ -43,6 +43,7 @@ export default function MapSettingDialog({
   const selectedGroup = scopedGroups.find((group) => group.id === editingGroupId)
     || scopedGroups.find((group) => group.id === initialGroupId) || scopedGroups[0];
   const groupId = selectedGroup?.id || '';
+  const groupName = selectedGroup?.name || groupId;
   // The entry group may be using the still-open Channel Configure draft.
   // Switching groups never changes that draft or another group's Pickup Mode.
   const pickupMode = groupId === initialGroupId && entryPickupMode
@@ -52,7 +53,7 @@ export default function MapSettingDialog({
   const previewGroups = scopedGroups.map((group) => group.id === initialGroupId && entryPickupMode
     ? { ...group, pickupMode: entryPickupMode } : group);
   const status = selectedGroup && !talkerPosition
-    ? `${groupId} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
+    ? `${groupName} uses ${pickupMode} mode. Zone settings are available in Talker Position mode.`
     : '';
 
   const externalPreviews = embedded && hasPreviews && previewTarget;
@@ -102,7 +103,7 @@ export default function MapSettingDialog({
                 data-initial-focus
                 onChange={(event) => setEditingGroupId(event.target.value)}
               >
-                {groups.map((group) => <option key={group.id} value={group.id}>{group.id} · {group.camera}</option>)}
+                {groups.map((group) => <option key={group.id} value={group.id}>{group.name || group.id} · {group.camera}</option>)}
               </select>
               <Icon name="chevron" size={16} />
             </div>
@@ -112,7 +113,7 @@ export default function MapSettingDialog({
               type="button"
               role="switch"
               aria-checked={groupEnabled}
-              aria-label={`Enable ${groupId} in map setting`}
+              aria-label={`Enable ${groupName} in map setting`}
               disabled={!open || !selectedGroup || !onToggleGroup}
               onClick={() => onToggleGroup?.(groupId)}
             ><span /></button>

@@ -65,7 +65,7 @@ function SettingsActionDialog({ action, settings, settingsList, groups, assignme
                       setError('');
                     }} />
                   <span className="zone-settings-delete-option__text"><strong>{item.name}</strong>
-                    <span>{users.length ? `使用中：${users.map(group => group.id).join('、')}` : '未使用'}</span>
+                    <span>{users.length ? `使用中：${users.map(group => group.name || group.id).join('、')}` : '未使用'}</span>
                   </span>
                 </label>;
               })}
@@ -73,7 +73,7 @@ function SettingsActionDialog({ action, settings, settingsList, groups, assignme
             <p className="zone-settings-delete-impact" aria-live="polite">
               {!selectedIds.length ? '尚未選擇設定檔。'
                 : affectedGroups.length
-                  ? `已選擇 ${selectedIds.length} 項。刪除後，${affectedGroups.map(group => group.id).join('、')} 將不使用設定檔。`
+                  ? `已選擇 ${selectedIds.length} 項。刪除後，${affectedGroups.map(group => group.name || group.id).join('、')} 將不使用設定檔。`
                   : `已選擇 ${selectedIds.length} 項，沒有 Group 使用這些設定檔。`}
             </p>
           </> : <label htmlFor={inputId}>設定檔名稱
@@ -333,7 +333,7 @@ export default function ZoneSettingsWorkspace({
     mapIdentity={`${microphone.id}/${group?.id ?? 'none'}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
     onAddZoneWithoutSettings={group && !settings ? () => openAction('create', true) : undefined}
     enabled={!group || enabled} active={active && (visible || modalOpen) && !action}
-    disabledMessage={group?.enabled === false ? `請先開啟左側的 ${group.id} 群組開關，再編輯區域。`
+    disabledMessage={group?.enabled === false ? `請先開啟左側的 ${group.name || group.id} 群組開關，再編輯區域。`
       : group && !enabled ? '請在 Channel Configure 中選擇 Talker Position，再編輯區域。' : undefined}
     emptyMessage={!scopedGroups.length ? '此麥克風尚未連接攝影機群組。' : !group ? '請先從左側選擇群組，開始設定區域。' : !settings ? scopedSettings.length
       ? '請選擇設定檔，或按 Add Zone 建立新的設定檔與區域。'

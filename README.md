@@ -21,7 +21,8 @@ npm run build
 - G1、G2、G3 選取，Group 開關，地圖縮放與置中。
 - Channel／Active Position 分頁可點選切換，支援方向鍵與 Home／End。
 - 分頁切換採用 230ms 淡入與輕微位移，藍色底線滑動；遵循系統減少動態效果偏好。
-- Channel 顯示 8 列 Microphone／Camera／Human tracking／Remarks；可選 Preset、編輯備註、搜尋。
+- Channel 每頁顯示 8 列 Microphone／Camera／Human tracking／Remarks；可選 Preset 0～254、編輯備註、搜尋所有頁面的 Channels。分頁、備註與 Preset 依群組分別保留；搜尋變更時回到第 1 頁。
+- V1～V5 的 Group ＋ 開啟 Link Camera & MIC：名稱可空白，留白時依穩定 ID 自動命名 G＋流水號；可選現有示範攝影機及 MIC-01／MIC-02，MIC Channels 為 8、16、…、248、255。Camera、MIC、Channels 均必填，名稱不分大小寫不可重複；Cancel、X、Escape 皆不建立資料。Save 後預設啟用並選取新群組，顯示 Channel 分頁；255 Channels 共 32 頁，最後一頁七列。新群組 Preset 與備註初始空白、Human tracking 為 Off，Pickup Mode 沿用 Talker Position；Zone Map 初始空白，依連結的麥克風出現在縮圖，首個新增區域為 Zone 1。自訂名稱在群組清單、地圖與設定檔使用清單同步顯示，長名稱截斷並保留提示。V1～V3 沿用共用的群組清單，地圖仍各版本獨立；V4、V5 的新增群組與設定分開保留。本機原型未連線設備，重新整理回到展示資料。
 - Profile、Output Layout、Position view 保留截圖中的選項。
 - Channel Configure 提供 Lobe／Coverage／Talker Position 與對應欄位，Map Setting 依版本進入分頁或設定視窗。
 - V1～V5 共用可操作的 Manual Mode Settings：左側 Output Layout 支援 Single、Side-by-side、Main Speaker (3-inputs)、Main Speaker (4-inputs)、PIP、Quad View。Quad View 為 2×2 四格；右側依布局顯示 1／2／3／4／2／4 列 Camera、Preset、Human tracking 與 Set preset。點選預覽格子可定位對應列，切換布局保留暫時隱藏列的設定。Human tracking 依參考圖呈現停用的 Off。Manual、Auto、Microphone Zones 可用方向鍵及 Home／End 切換，切換版本與回饋頁保留 Manual 的布局與攝影機配置。
@@ -49,7 +50,7 @@ npm run build
 - Zone Map 整張格子地圖為 51 × 51 格。按住空白格拖曳可平移地圖；拖曳 Zone 移動區域，點擊空白處解除選取。平移只改變視角，不修改座標或尺寸。
 - 地圖內右下角懸浮工具框提供 View／百分比、置中、縮小、放大與 Coordinates。Zone Map 滾輪及按鈕縮放限制為 25%～150%，Active Position 維持 25%～125%；置中同時清除平移並恢復 100%，不修改 Zone 幾何資料。
 - 切換分頁、Group 與設計版本保留本次開啟頁面的地圖資料；重新整理會還原展示資料。
-- 導覽、Group 新增、Time、Re-configure、Help 與 Close settings 仍保留外觀。
+- 導覽、Time、Re-configure、Help 與 Close settings 仍保留外觀。
 - 所有設定只影響本機原型；未連線到 MT300。51 × 51 格由使用者指定；每格延續原型 0.5 m 的比例（整張 25.5 × 25.5 m）、MIC-01、矩形 Zones 及 mic 中心原點仍為預覽假設，待設備規格確認。100% 延續原有顯示比例，整張地圖的邊緣可透過平移查看。
 
 樣式變數位於 `src/index.css`，地圖元件位於 `src/components/PositionMap.jsx`。

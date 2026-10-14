@@ -130,6 +130,10 @@
   text-align: center;
 }
 
+.channel-panel__table tbody .channel-panel__filler td {
+  border-bottom: 0;
+}
+
 .channel-panel__pagination {
   display: flex;
   align-items: center;

@@ -22,7 +22,7 @@ function PreviewMap({ group, zones, view }) {
   const gridExtent = 1275;
   const gridLines = Array.from({ length: 52 }, (_, index) => index * 50 - gridExtent);
   return <svg className="group-zone-previews__map" viewBox={`${-halfWidth} ${-halfHeight} ${halfWidth * 2} ${halfHeight * 2}`}
-    role="img" aria-label={`${group.id} zone preview`}>
+    role="img" aria-label={`${group.name || group.id} zone preview`}>
     <g className="group-zone-previews__grid" aria-hidden="true">
       {gridLines.map((position) => <path key={position} d={`M${position} ${-gridExtent}V${gridExtent}M${-gridExtent} ${position}H${gridExtent}`} />)}
     </g>
@@ -47,19 +47,20 @@ export default function GroupZonePreviews({ groups, currentGroupId, initialGroup
   return <aside className="group-zone-previews" aria-label="Group previews">
     <div className="group-zone-previews__list">
       {groups.map((group) => {
+        const groupName = group.name || group.id;
         const muted = group.enabled === false || group.pickupMode !== 'Talker Position';
         const selected = group.id === currentGroupId;
         return <div key={group.id} className={`group-zone-previews__card${muted ? ' is-muted' : ''}${selected ? ' is-selected' : ''}`}
           style={{ '--preview-color': getGroupReferenceColor(group.id) }}>
           <button type="button" className="group-zone-previews__select" disabled={!active}
-            aria-label={`Edit ${group.id} ${group.camera} zones${group.enabled === false ? ', group disabled' : ''}`}
+            aria-label={`Edit ${groupName} ${group.camera} zones${group.enabled === false ? ', group disabled' : ''}`}
             aria-pressed={selected} data-initial-focus={group.id === initialGroupId ? '' : undefined}
             onClick={() => onSelectGroup(group.id)}>
-            <span className="group-zone-previews__heading"><span className="group-zone-previews__dot" /><strong>{group.id}</strong><span>{group.camera}</span></span>
+            <span className="group-zone-previews__heading"><span className="group-zone-previews__dot" /><strong title={groupName}>{groupName}</strong><span>{group.camera}</span></span>
             <PreviewMap group={group} zones={maps[group.id] || []} view={view} />
           </button>
           <button type="button" className={`switch group-zone-previews__switch${group.enabled !== false ? ' is-on' : ''}`}
-            role="switch" aria-checked={group.enabled !== false} aria-label={`Enable ${group.id} in map setting`}
+            role="switch" aria-checked={group.enabled !== false} aria-label={`Enable ${groupName} in map setting`}
             disabled={!active || !onToggleGroup} onClick={() => onToggleGroup?.(group.id)}><span /></button>
         </div>;
       })}

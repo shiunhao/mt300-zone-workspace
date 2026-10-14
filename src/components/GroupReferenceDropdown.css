@@ -63,7 +63,7 @@
   accent-color: var(--blue, #1e9bf0);
   cursor: pointer;
 }
-.group-reference-option-id { flex-shrink: 0; min-width: 21px; }
+.group-reference-option-id { min-width: 21px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .group-reference-option-dot {
   flex-shrink: 0;
   width: 8px;
@@ -74,6 +74,7 @@
 }
 .group-reference-option > input:disabled { cursor: default; }
 .group-reference-option-camera {
+  flex-shrink: 0;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

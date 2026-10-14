@@ -11,7 +11,7 @@ export default function GroupReferenceDropdown({ groups = [], checked = {}, onCh
   const triggerRef = useRef(null)
   const menuRef = useRef(null)
   const id = useId()
-  const groupsKey = groups.map((group) => `${group.id}:${group.camera}`).join('|')
+  const groupsKey = groups.map((group) => `${group.id}:${group.name || group.id}:${group.camera}`).join('|')
   const positioned = position !== null
   const expanded = open && !disabled
 
@@ -134,11 +134,11 @@ export default function GroupReferenceDropdown({ groups = [], checked = {}, onCh
                 type="checkbox"
                 disabled={disabled}
                 checked={Boolean(checked[group.id])}
-                aria-label={`Show ${group.id} reference zones`}
+                aria-label={`Show ${group.name || group.id} reference zones`}
                 onChange={(event) => { if (!disabled) onChange(group.id, event.target.checked) }}
               />
               <span className="group-reference-option-dot" aria-hidden="true" />
-              <span className="group-reference-option-id">{group.id}</span>
+              <span className="group-reference-option-id" title={group.name || group.id}>{group.name || group.id}</span>
               <span className="group-reference-option-camera">{group.camera}</span>
             </label>
           ))}

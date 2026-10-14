@@ -162,6 +162,7 @@ export default function ZoneMapPanel({
   const allGroups = groups.length ? groups : [{ id: 'G1', camera: 'TR535N' }, { id: 'G2', camera: 'TR211' }, { id: 'G3', camera: 'TR313' }];
   const otherGroups = allGroups.filter((group) => group.id !== groupId);
   const currentGroup = allGroups.find((group) => group.id === groupId) || { id: groupId, enabled, camera: '—' };
+  const currentGroupName = currentGroup.name || currentGroup.id;
   const availableMaps = maps ?? (isWorkspace ? {} : groupMaps);
   const visibleIds = new Set(visibleGroupIds || allGroups.map((group) => group.id));
   const visibleGroups = allGroups.filter((group) => visibleIds.has(group.id));
@@ -282,7 +283,7 @@ export default function ZoneMapPanel({
   }
   function addZone() {
     if (!editable) return;
-    let number = compactSettings ? 1 : nextId.current;
+    let number = compactSettings || currentGroup.newlyCreated ? 1 : nextId.current;
     while (currentZones.some((zone) => zone.id === `zone-${number}` || zone.name === `Zone ${number}`)) number += 1;
     let zone = null;
     // Start at the origin, then look outward for a free half-meter grid point.
@@ -450,7 +451,7 @@ export default function ZoneMapPanel({
     const zoneEditable = isOwn && editable;
     const conflicting = isOwn && activePreview?.zone.id === zone.id && activePreview.conflicting;
     const muted = isOverview && owner.enabled === false;
-    const label = isWorkspace ? `${owner.id} · ${zone.name}` : zone.name;
+    const label = isWorkspace ? `${owner.name || owner.id} · ${zone.name}` : zone.name;
     return <g key={`${owner.id}-${zone.id}`} className={`zone-map__zone ${selected ? 'is-selected' : ''} ${zoneEditable ? 'is-editable' : ''}${conflicting ? ' is-conflicting' : ''}${isOverview ? ' zone-map__overview-zone' : ''}${muted ? ' is-group-disabled' : ''}`} style={isOverview ? { '--group-zone-color': muted ? '#77828f' : getGroupReferenceColor(owner.id) } : undefined} data-zone-group={owner.id} data-zone-id={zone.id} role="button" tabIndex={enabled ? 0 : -1} aria-disabled={!enabled} aria-invalid={conflicting || undefined} aria-label={`${label}, X ${zone.x}, Y ${zone.y}, width ${zone.width}, height ${zone.height} meters`} aria-pressed={selected} onClick={() => selectZone(zone.id, owner.id)} onKeyDown={(event) => zoneKeyDown(event, zone, owner.id)} onPointerDown={(event) => { if (zoneEditable) beginDrag(event, zone); }}>
       <rect {...rect} rx="3" /><text x={rect.x + 12} y={rect.y + 25}>{label}</text>
       {selected && zoneEditable && RESIZE_CORNERS.map((corner) => <rect key={corner.id} className={`zone-map__resize-handle zone-map__resize-handle--${corner.id}`} data-resize-corner={corner.id} x={(corner.id.includes('w') ? rect.x : rect.x + rect.width) - 8} y={(corner.id.includes('n') ? rect.y : rect.y + rect.height) - 8} width="16" height="16" rx="2" role="button" tabIndex="0" aria-label={`Resize ${zone.name} from ${corner.label} corner`} onPointerDown={(event) => beginDrag(event, zone, 'resize', corner.id)} onKeyDown={(event) => resizeKeyDown(event, zone, corner.id)}><title>Resize {zone.name} from {corner.label} corner</title></rect>)}
@@ -469,11 +470,11 @@ export default function ZoneMapPanel({
   const notice = !enabled && disabledMessage ? disabledMessage : !hasVisibleZones ? emptyMessage || (compactSettings ? '尚未新增區域' : 'No zones yet') : null;
 
   return (
-    <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : groupSelected ? `${groupId} zone map` : 'Microphone zone map'} aria-disabled={!enabled} inert={enabled || compactSettings ? undefined : ''}>
+    <section className={`zone-map-panel${isWorkspace ? ' is-workspace' : ''}${isOverview ? ' is-overview' : ''}${compactSettings ? ' is-compact-settings' : ''}${enabled ? '' : ' is-disabled'}`} aria-label={isOverview ? 'Microphone group zone overview' : groupSelected ? `${currentGroupName} zone map` : 'Microphone zone map'} aria-disabled={!enabled} inert={enabled || compactSettings ? undefined : ''}>
       <div className="zone-map__layout">
         <div className="zone-map__main">
           <div className="zone-map__toolbar" inert={compactSettings && !enabled ? '' : undefined}>
-            {toolbarStart || (showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong>{groupId}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
+            {toolbarStart || (showGroupContext ? <span className="zone-map__model zone-map__group-context"><strong title={currentGroupName}>{currentGroupName}</strong><Icon name="camera" size={16} /><span>{currentGroup.camera}</span></span>
               : <span className="zone-map__model">{microphone.model}</span>)}
             {zoneActions}
             {toolbarEnd}
@@ -486,8 +487,8 @@ export default function ZoneMapPanel({
               <rect x="0" y="0" width={WORLD_SIZE} height={WORLD_SIZE} fill="none" stroke="#626e7b" strokeWidth="2" vectorEffect="non-scaling-stroke" />
               <path d={`M${ORIGIN} 0V${WORLD_SIZE}M0 ${ORIGIN}H${WORLD_SIZE}`} stroke="#1e9bf0" strokeWidth="1.5" strokeDasharray="7 7" opacity=".65" vectorEffect="non-scaling-stroke" pointerEvents="none" />
               <text x={WORLD_SIZE - 35} y={ORIGIN - 10} className="zone-map__axis-label" pointerEvents="none">+X</text><text x={ORIGIN + 14} y="28" className="zone-map__axis-label" pointerEvents="none">+Y</text>
-              {!isOverview && referenceGroups.map((group) => <g key={group.id} className={`zone-map__reference-geometry${isWorkspace && group.enabled === false ? ' is-group-disabled' : ''}`} style={{ '--group-reference-color': isWorkspace && group.enabled === false ? '#77828f' : getGroupReferenceColor(group.id) }} data-reference-group={group.id} aria-label={`${group.id} reference zones, read-only`}>
-                {(availableMaps[group.id] || []).map((zone) => { const rect = mapRect(zone); return <g key={`${group.id}-${zone.id}`}><rect {...rect} rx="3" /><text x={rect.x + 10} y={rect.y + rect.height - 12}>{group.id} · {zone.name}</text></g>; })}
+              {!isOverview && referenceGroups.map((group) => <g key={group.id} className={`zone-map__reference-geometry${isWorkspace && group.enabled === false ? ' is-group-disabled' : ''}`} style={{ '--group-reference-color': isWorkspace && group.enabled === false ? '#77828f' : getGroupReferenceColor(group.id) }} data-reference-group={group.id} aria-label={`${group.name || group.id} reference zones, read-only`}>
+                {(availableMaps[group.id] || []).map((zone) => { const rect = mapRect(zone); return <g key={`${group.id}-${zone.id}`}><rect {...rect} rx="3" /><text x={rect.x + 10} y={rect.y + rect.height - 12}>{group.name || group.id} · {zone.name}</text></g>; })}
               </g>)}
               {isOverview ? visibleGroups.flatMap((group) => (availableMaps[group.id] || []).map((zone) => <line key={`connector-${group.id}-${zone.id}`} className={`zone-map__connector zone-map__overview-connector${group.id === groupId && selectedZone?.id === zone.id ? ' is-selected' : ''}`} style={{ '--group-zone-color': group.enabled === false ? '#77828f' : getGroupReferenceColor(group.id) }} x1={ORIGIN} y1={ORIGIN} x2={ORIGIN + zone.x * UNITS_PER_METER} y2={ORIGIN - zone.y * UNITS_PER_METER} pointerEvents="none" aria-hidden="true" />)) : displayZones.map((zone) => <line key={`connector-${zone.id}`} className={`zone-map__connector${selectedZone?.id === zone.id ? ' is-selected' : ''}`} x1={ORIGIN} y1={ORIGIN} x2={ORIGIN + zone.x * UNITS_PER_METER} y2={ORIGIN - zone.y * UNITS_PER_METER} pointerEvents="none" aria-hidden="true" />)}
               {isOverview ? visibleGroups.flatMap((group) => (availableMaps[group.id] || []).map((zone) => renderZone(zone, group))) : displayZones.map((zone) => renderZone(zone))}
@@ -509,7 +510,7 @@ export default function ZoneMapPanel({
             </div>
           </> : <div className="zone-map__inspector-section">
             <h4>Zone settings{!canEdit && <span>Read-only</span>}</h4>
-            {isWorkspace && <p className="zone-map__owner"><span className="zone-map__owner-color" style={{ backgroundColor: currentGroup.enabled === false ? '#77828f' : getGroupReferenceColor(groupId) }} /><strong>{groupId}</strong><span>{currentGroup.camera || '—'}</span></p>}
+            {isWorkspace && <p className="zone-map__owner"><span className="zone-map__owner-color" style={{ backgroundColor: currentGroup.enabled === false ? '#77828f' : getGroupReferenceColor(groupId) }} /><strong title={currentGroupName}>{currentGroupName}</strong><span>{currentGroup.camera || '—'}</span></p>}
             <label className="zone-map__zone-select">Selected zone{zoneSelector}</label>
             {selectedZone ? <>
               <p className="zone-map__field-caption">Position · Zone center</p>

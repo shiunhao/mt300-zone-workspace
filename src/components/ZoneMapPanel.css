@@ -24,9 +24,11 @@
 .zone-map__toolbar > div { display: flex; flex-shrink: 0; gap: 8px; }
 .zone-map__toolbar > .group-reference-dropdown { margin-left: auto; }
 .zone-map__group-context { display: inline-flex; align-items: center; gap: 8px; }
-.zone-map__group-context strong { font-weight: 600; }
+.zone-map__group-context strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .zone-map__group-context > svg, .zone-map__group-context > span { color: var(--dim); font-weight: 400; }
 .zone-map__model { flex: 1 0 106px; margin-right: auto; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.zone-map__model.zone-map__group-context { flex: 1 1 106px; min-width: 0; }
+.zone-map__group-context > svg, .zone-map__group-context > span { flex-shrink: 0; }
 .zone-map__canvas-wrap { position: relative; flex: 1; min-height: 0; border: 1px solid var(--line-2); border-radius: 6px; background: #252b32; overflow: hidden; container-type: size; }
 .zone-map__canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; }
 .zone-map__canvas.is-panning { cursor: grabbing; }
@@ -86,8 +88,8 @@
 .zone-map__overview-connector { stroke: var(--group-zone-color); stroke-opacity: .45; stroke-width: 1; }
 .zone-map__overview-connector.is-selected { stroke: var(--group-zone-color); stroke-opacity: .9; stroke-width: 1.5; }
 .zone-map__owner { display: flex; align-items: center; gap: 7px; min-width: 0; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 12px; }
-.zone-map__owner strong { flex-shrink: 0; font-weight: 600; }
-.zone-map__owner > span:last-child { margin-left: auto; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zone-map__owner strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.zone-map__owner > span:last-child { flex-shrink: 0; margin-left: auto; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .zone-map__owner-color { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; }
 
 @media (max-width: 1399px) {
