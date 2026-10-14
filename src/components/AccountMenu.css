@@ -1,0 +1,16 @@
+.account-menu { position: relative; flex-shrink: 0; }
+.account-menu__trigger { display: flex; align-items: center; gap: 14px; border: 1px solid #777e85; border-radius: 24px; padding: 3px 4px 3px 18px; background: transparent; font-size: 16px; color: var(--text); white-space: nowrap; }
+.account-menu__trigger:hover, .account-menu__trigger[aria-expanded="true"] { background: #252a30; border-color: #a3adb6; }
+.account-menu__trigger > svg { width: 32px; height: 32px; color: #a9afb4; }
+.account-menu__avatar-cutout { fill: #111315; }
+.account-menu__options { position: absolute; top: calc(100% + 5px); right: 0; z-index: 1000; width: 240px; max-width: calc(100vw - 24px); padding: 0; background: #0d0e10; border: 1px solid #565e67; box-shadow: 0 8px 24px #0008; }
+.account-menu__option { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 7px 12px; text-align: left; background: transparent; border: 0; font-size: 16px; color: var(--text); }
+.account-menu__option > svg:first-child { width: 32px; height: 32px; color: #a9afb4; }
+.account-menu__option .account-menu__avatar-cutout { fill: #0d0e10; }
+.account-menu__option:hover, .account-menu__option:focus-visible { background: #263743; outline-offset: -3px; }
+.account-menu__option.is-selected { background: var(--blue); color: #fff; }
+.account-menu__option.is-selected > svg:first-child { color: #fff; }
+.account-menu__option.is-selected .account-menu__avatar-cutout { fill: var(--blue); }
+.account-menu__check { width: 24px; height: 24px; margin-left: auto; }
+@media (max-width: 899px) { .account-menu__trigger { font-size: 14px; padding-left: 12px; gap: 8px; } }
+@media (max-width: 639px) { .account-menu { margin-left: auto; } .account-menu__trigger { gap: 0; padding: 0; border: 0; } .account-menu__trigger > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); } .account-menu__trigger > svg { width: 27px; height: 27px; } }

@@ -139,6 +139,7 @@ export default function ZoneMapPanel({
   microphone = WORKSPACE_MICROPHONE, showGroupContext = false,
   compactSettings = false, toolbarStart, toolbarEnd, mapIdentity, readOnly = false, emptyMessage, disabledMessage,
   onAddZoneWithoutSettings, groupSelected = true,
+  viewOnly = false,
 }) {
   const isWorkspace = variant === 'workspace';
   const isOverview = isWorkspace && overview;
@@ -170,9 +171,9 @@ export default function ZoneMapPanel({
   const selectionKey = mapIdentity || groupId;
   const mapContext = `${variant}/${groupId}/${mapIdentity || ''}/${isOverview ? 'overview' : 'edit'}`;
   const currentZones = availableMaps[groupId] || [];
-  const canEdit = groupSelected && !readOnly && !isOverview && (!isWorkspace || currentGroup.enabled !== false);
+  const canEdit = !viewOnly && groupSelected && !readOnly && !isOverview && (!isWorkspace || currentGroup.enabled !== false);
   const editable = isInteractive && canEdit;
-  const activePreview = dragPreview?.context === mapContext ? dragPreview : null;
+  const activePreview = !viewOnly && dragPreview?.context === mapContext ? dragPreview : null;
   const displayZones = activePreview ? currentZones.map((zone) => zone.id === activePreview.zone.id ? activePreview.zone : zone) : currentZones;
   const currentSelectionId = Object.prototype.hasOwnProperty.call(selection, selectionKey)
     ? selection[selectionKey] : currentZones[0]?.id;
@@ -228,6 +229,10 @@ export default function ZoneMapPanel({
   useEffect(() => {
     if (!isInteractive || (dragRef.current && dragRef.current.context !== mapContext)) cancelGesture();
   }, [isInteractive, mapContext]);
+
+  useEffect(() => {
+    if (viewOnly && dragRef.current?.action !== 'pan') cancelGesture();
+  }, [viewOnly]);
 
   useEffect(() => {
     const onVisibilityChange = () => { if (document.hidden) cancelGesture(); };
@@ -306,6 +311,7 @@ export default function ZoneMapPanel({
     setFeedback(`${zone.name} added.`);
   }
   function requestAddZone() {
+    if (viewOnly) return;
     if (editable) addZone();
     else if (isInteractive && readOnly) onAddZoneWithoutSettings?.();
   }
@@ -458,7 +464,7 @@ export default function ZoneMapPanel({
     </g>;
   }
 
-  const canAddZone = editable || (isInteractive && groupSelected && readOnly && Boolean(onAddZoneWithoutSettings));
+  const canAddZone = !viewOnly && (editable || (isInteractive && groupSelected && readOnly && Boolean(onAddZoneWithoutSettings)));
   const zoneActions = <div className="zone-map__zone-actions"><button type="button" className="zone-map__button" disabled={!canAddZone} onClick={requestAddZone}><Icon name="plus" size={15} />Add Zone</button><button type="button" className="zone-map__button" disabled={!editable || !selectedZone} onClick={removeZone}>Remove Zone</button></div>;
   const zoneSelector = <select aria-label="Selected zone" value={selectedZone?.id || ''} disabled={!enabled || !groupSelected} onChange={(event) => selectZone(event.target.value || null)}><option value="">{compactSettings ? '請選擇區域' : 'Select a zone'}</option>{currentZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}</select>;
   const positionFields = selectedZone && <div className="zone-map__field-grid"><NumericField key={`${selectionKey}-${selectedZone.id}-x`} label="X" value={selectedZone.x} disabled={!editable} onCommit={(value) => commitField('x', value)} /><NumericField key={`${selectionKey}-${selectedZone.id}-y`} label="Y" value={selectedZone.y} disabled={!editable} onCommit={(value) => commitField('y', value)} /></div>;

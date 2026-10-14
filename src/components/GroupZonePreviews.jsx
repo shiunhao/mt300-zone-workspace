@@ -42,7 +42,7 @@ function PreviewMap({ group, zones, view }) {
   </svg>;
 }
 
-export default function GroupZonePreviews({ groups, currentGroupId, initialGroupId = currentGroupId, maps, active, onSelectGroup, onToggleGroup }) {
+export default function GroupZonePreviews({ groups, currentGroupId, initialGroupId = currentGroupId, maps, active, onSelectGroup, onToggleGroup, viewOnly = false }) {
   const view = previewView(Object.fromEntries(groups.map((group) => [group.id, maps[group.id] || []])));
   return <aside className="group-zone-previews" aria-label="Group previews">
     <div className="group-zone-previews__list">
@@ -61,7 +61,7 @@ export default function GroupZonePreviews({ groups, currentGroupId, initialGroup
           </button>
           <button type="button" className={`switch group-zone-previews__switch${group.enabled !== false ? ' is-on' : ''}`}
             role="switch" aria-checked={group.enabled !== false} aria-label={`Enable ${groupName} in map setting`}
-            disabled={!active || !onToggleGroup} onClick={() => onToggleGroup?.(group.id)}><span /></button>
+            disabled={viewOnly || !active || !onToggleGroup} onClick={() => { if (!viewOnly) onToggleGroup?.(group.id); }}><span /></button>
         </div>;
       })}
       {!groups.length && <p className="group-zone-previews__none">No groups</p>}

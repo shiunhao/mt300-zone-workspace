@@ -20,6 +20,7 @@ export default function MapSettingDialog({
   onEditingGroupChange,
   onToggleGroup,
   onClose,
+  viewOnly = false,
 }) {
   const titleId = useId();
   const groupSelectId = useId();
@@ -68,6 +69,7 @@ export default function MapSettingDialog({
       onEditingGroupChange?.(id);
     }}
     onToggleGroup={onToggleGroup}
+    viewOnly={viewOnly}
   />;
 
   const content = <section
@@ -114,8 +116,8 @@ export default function MapSettingDialog({
               role="switch"
               aria-checked={groupEnabled}
               aria-label={`Enable ${groupName} in map setting`}
-              disabled={!open || !selectedGroup || !onToggleGroup}
-              onClick={() => onToggleGroup?.(groupId)}
+              disabled={viewOnly || !open || !selectedGroup || !onToggleGroup}
+              onClick={() => { if (!viewOnly) onToggleGroup?.(groupId); }}
             ><span /></button>
           </div>}
           <button
@@ -141,6 +143,7 @@ export default function MapSettingDialog({
               maps={hasPreviews ? previewMaps : undefined}
               onMapsChange={hasPreviews ? setPreviewMaps : undefined}
               showReferences={!hasPreviews}
+              viewOnly={viewOnly}
             /> : <p className="map-setting-dialog__empty">No camera groups connected to {microphone.id}.</p>}
           </div>
         </div>

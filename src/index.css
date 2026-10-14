@@ -32,6 +32,7 @@ button:disabled { cursor: default; }
 svg { flex-shrink: 0; }
 
 .settings-shell { display: flex; min-height: 100svh; }
+.settings-shell[hidden] { display: none !important; }
 .sidebar { width: 220px; flex: 0 0 220px; background: var(--side); border-right: 1px solid var(--line); }
 .product-name { height: 88px; padding: 0 24px; display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; letter-spacing: .2px; border-bottom: 1px solid var(--line); }
 .product-name svg { color: var(--blue); }
@@ -41,6 +42,12 @@ svg { flex-shrink: 0; }
 .nav-item:hover { background: var(--side-hover); }
 .nav-item.is-active { background: var(--side-active); border-left-color: #e8eaec; color: #fff; }
 .nav-item.is-active svg { color: #fff; }
+.nav-item:disabled { color: var(--faint); cursor: default; }
+.nav-item:disabled svg { color: var(--faint); }
+.nav-item:disabled:hover { background: transparent; }
+.settings-shell button:disabled { opacity: .5; }
+.settings-shell select:disabled { color: var(--faint); cursor: default; }
+.is-view-only .channel-panel input[readonly] { color: #b1bac3; cursor: default; border-color: var(--line); background: #20252b; }
 .settings-main { flex: 1; min-width: 0; padding: 16px 24px 24px; }
 .page-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 64px; }
 .page-actions { display: flex; gap: 16px; }

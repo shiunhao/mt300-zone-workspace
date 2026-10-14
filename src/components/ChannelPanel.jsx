@@ -14,7 +14,7 @@ function createChannels(count, emptyInitial) {
   }))
 }
 
-export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKey = groupId, channelCount = 8, emptyInitial = false, groupName = groupId }) {
+export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKey = groupId, channelCount = 8, emptyInitial = false, groupName = groupId, viewOnly = false }) {
   const pageSelectId = useId()
   const [channelsByGroup, setChannelsByGroup] = useState({})
   const [pagesByGroup, setPagesByGroup] = useState({})
@@ -40,6 +40,7 @@ export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKe
   }, [stateKey, query])
 
   function updateChannel(number, field, value) {
+    if (viewOnly) return;
     setChannelsByGroup((current) => {
       const storedChannels = current[stateKey] ?? []
       const nextChannels = createChannels(Math.max(count, storedChannels.length), emptyInitial)
@@ -91,6 +92,7 @@ export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKe
                     <select
                       aria-label={`${groupName} Channel ${channel.number} camera preset`}
                       value={channel.preset}
+                      disabled={viewOnly}
                       onChange={(event) => updateChannel(channel.number, 'preset', event.target.value)}
                     >
                       <option value="">Select preset</option>
@@ -101,7 +103,7 @@ export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKe
                 </td>
                 <td>
                   <div className="channel-panel__select">
-                    <select aria-label={`${groupName} Channel ${channel.number} human tracking`} value={channel.tracking} onChange={(event) => updateChannel(channel.number, 'tracking', event.target.value)}>
+                    <select aria-label={`${groupName} Channel ${channel.number} human tracking`} value={channel.tracking} disabled={viewOnly} onChange={(event) => updateChannel(channel.number, 'tracking', event.target.value)}>
                       <option value="Off">Off</option>
                     </select>
                     <Icon name="chevron" size={17} />
@@ -112,6 +114,7 @@ export default function ChannelPanel({ groupId = 'G2', searchQuery = '', stateKe
                     type="text"
                     aria-label={`${groupName} Channel ${channel.number} remarks`}
                     value={channel.remarks}
+                    readOnly={viewOnly}
                     onChange={(event) => updateChannel(channel.number, 'remarks', event.target.value)}
                   />
                 </td>

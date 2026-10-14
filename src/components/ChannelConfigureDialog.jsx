@@ -84,6 +84,7 @@ export default function ChannelConfigureDialog({
   onMapSetting,
   mapIsTab = false,
   mapTargetLabel = 'Zone Map tab',
+  viewOnly = false,
 }) {
   const titleId = useId();
   const pickupId = useId();
@@ -125,7 +126,7 @@ export default function ChannelConfigureDialog({
           </button>
         </header>
 
-        <form onSubmit={(event) => { event.preventDefault(); onSave(draft); }}>
+        <form onSubmit={(event) => { event.preventDefault(); if (!viewOnly) onSave(draft); }}>
           <div className="configure-dialog__body">
             <div className="configure-dialog__model">
               <span>Microphone Model</span>
@@ -135,7 +136,7 @@ export default function ChannelConfigureDialog({
             <div className="configure-dialog__field">
               <label htmlFor={pickupId}>Pickup Mode</label>
               <div className="select-field">
-                <select id={pickupId} value={pickupMode} onChange={(event) => setPickupMode(event.target.value)} data-initial-focus>
+                <select id={pickupId} value={pickupMode} disabled={viewOnly} onChange={(event) => { if (!viewOnly) setPickupMode(event.target.value); }} data-initial-focus={viewOnly ? undefined : ''}>
                   <option>Lobe</option>
                   <option>Coverage</option>
                   <option>Talker Position</option>
@@ -160,7 +161,7 @@ export default function ChannelConfigureDialog({
                 <div className="configure-dialog__field">
                   <label htmlFor={channelId}>Channel Information</label>
                   <div className="select-field">
-                    <select id={channelId} value={channelInformation} onChange={(event) => setChannelInformation(event.target.value)}>
+                    <select id={channelId} value={channelInformation} disabled={viewOnly} onChange={(event) => { if (!viewOnly) setChannelInformation(event.target.value); }}>
                       <option>Automixer Gate Out</option>
                       <option>Talker Position</option>
                     </select>
@@ -173,7 +174,7 @@ export default function ChannelConfigureDialog({
 
           <footer className="configure-dialog__footer">
             <button type="button" className="button" onClick={onClose}>Cancel</button>
-            <button type="submit" className="button configure-dialog__save">Save</button>
+            <button type="submit" className="button configure-dialog__save" disabled={viewOnly}>Save</button>
           </footer>
         </form>
       </section>

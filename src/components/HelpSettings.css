@@ -1,0 +1,15 @@
+.help-settings { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; margin-top: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.help-settings[hidden], .help-settings__panel[hidden] { display: none !important; }
+.help-settings__header { display: flex; align-items: center; flex-shrink: 0; gap: 16px; border-bottom: 1px solid var(--line-2); padding-right: 16px; }
+.help-settings__tabs { display: flex; flex: 1; min-width: 0; }
+.help-settings__tabs button { position: relative; min-width: 0; flex: 1; min-height: 64px; padding: 16px 12px; border: 0; background: transparent; font-size: 16px; white-space: nowrap; }
+.help-settings__tabs button + button::before { content: ''; position: absolute; left: 0; top: 20px; height: 24px; width: 1px; background: var(--line-2); }
+.help-settings__tabs button.is-active { color: var(--blue); box-shadow: inset 0 -3px var(--blue); }
+.help-settings__tabs button:hover { background: var(--panel-2); }
+.help-settings__panel { flex: 1; padding: 64px 7%; min-height: 0; overflow: auto; }
+.help-settings__panel h1 { margin: 0 0 32px; font-size: 18px; font-weight: 600; }
+.help-settings__manual { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 16px; border: 1px solid var(--line-2); border-radius: 4px; background: var(--page); font-size: 14px; }
+.help-settings__manual .button { min-width: 136px; text-decoration: none; }
+.help-settings__manual .button:disabled { color: var(--faint); }
+@media(max-width: 899px) { .help-settings { min-height: 500px; } .help-settings__tabs button { min-height: 56px; font-size: 14px; padding: 12px 8px; } .help-settings__panel { padding: 32px 24px; } }
+@media(max-width: 639px) { .help-settings__header { align-items: flex-start; gap: 4px; padding-right: 4px; } .help-settings__header > .icon-button { margin-top: 10px; width: 28px; } .help-settings__tabs { flex-wrap: wrap; } .help-settings__tabs button { flex: 1 0 50%; } .help-settings__manual { flex-wrap: wrap; padding: 12px; } .help-settings__panel { padding: 24px 16px; } }

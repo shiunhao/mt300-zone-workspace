@@ -25,6 +25,7 @@ export default function MicrophoneSetup({
   sidebarTarget,
   onToggleGroup,
   onMapOpenChange,
+  viewOnly = false,
 }) {
   const selectId = useId();
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState(microphones[0]?.id || '');
@@ -122,6 +123,7 @@ export default function MicrophoneSetup({
       onToggleGroup={onToggleGroup}
       onEditingGroupChange={rememberEditingGroup}
       onClose={closeMap}
+      viewOnly={viewOnly}
     />}
   </section>;
 }

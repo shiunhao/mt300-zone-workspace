@@ -95,6 +95,7 @@ function SettingsActionDialog({ action, settings, settingsList, groups, assignme
 export default function ZoneSettingsWorkspace({
   microphones = [], groups = [], active = true, visible = true, initialMaps,
   mapRequest, sidebarTarget, onToggleGroup, onMapOpenChange,
+  viewOnly = false,
 }) {
   const microphoneSelectId = useId();
   const settingsSelectId = useId();
@@ -197,6 +198,13 @@ export default function ZoneSettingsWorkspace({
   }, [active, closeModal]);
 
   useEffect(() => {
+    if (viewOnly) {
+      setAction(null);
+      setMenuOpen(false);
+    }
+  }, [viewOnly]);
+
+  useEffect(() => {
     onMapOpenChange?.(active && (modalOpen || Boolean(action)));
   }, [active, modalOpen, action, onMapOpenChange]);
 
@@ -236,7 +244,7 @@ export default function ZoneSettingsWorkspace({
   };
 
   const openAction = (kind, addFirstZone = false) => {
-    if (!group || !enabled) return;
+    if (viewOnly || !group || !enabled) return;
     setMenuOpen(false);
     if (!addFirstZone) menuTriggerRef.current?.focus();
     setAction({ kind, settingsId: settings?.id, groupId: group.id, microphoneId: microphone.id,
@@ -245,6 +253,7 @@ export default function ZoneSettingsWorkspace({
   };
 
   const confirmAction = value => {
+    if (viewOnly || !action) return;
     // Validate before scheduling React state updates so the dialog can display
     // name conflicts without closing. No separate geometry-save step exists.
     const apply = previous => {
@@ -264,7 +273,7 @@ export default function ZoneSettingsWorkspace({
   };
 
   const updateMaps = updater => {
-    if (!group || !settings || !enabled) return;
+    if (viewOnly || !group || !settings || !enabled) return;
     const editingSettingsId = settings.id;
     const editingGroupId = group.id;
     setLibrary(previous => {
@@ -292,9 +301,9 @@ export default function ZoneSettingsWorkspace({
   const settingsControls = <div className="zone-settings-controls">
     <label htmlFor={settingsSelectId}>Zone Settings</label>
     <div className="select-field zone-settings-controls__select">
-      <select id={settingsSelectId} aria-label="Zone Settings" value={settings?.id || ''} disabled={!group || !enabled}
+      <select id={settingsSelectId} aria-label="Zone Settings" value={settings?.id || ''} disabled={viewOnly || !group || !enabled}
         onChange={event => {
-          if (!group || !enabled) return;
+          if (viewOnly || !group || !enabled) return;
           setMenuOpen(false);
           setLibrary(previous => assignSettings(previous, groups, group.id, event.target.value || null));
         }}>
@@ -307,9 +316,9 @@ export default function ZoneSettingsWorkspace({
   const settingsManagement = <div className="zone-settings-controls__manage" ref={menuRef}>
       <button ref={menuTriggerRef} className="zone-map__button zone-settings-controls__more" type="button" aria-label="管理設定檔"
         aria-haspopup="menu" aria-expanded={menuOpen} aria-controls={menuOpen ? menuId : undefined}
-        disabled={!group || !enabled} onClick={() => setMenuOpen(previous => !previous)}
-        onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); setMenuOpen(true); } }}>⋯</button>
-      {menuOpen && <div className="zone-settings-menu" id={menuId} role="menu" onKeyDown={handleMenuKeys}>
+        disabled={viewOnly || !group || !enabled} onClick={() => { if (!viewOnly) setMenuOpen(previous => !previous); }}
+        onKeyDown={event => { if (!viewOnly && event.key === 'ArrowDown') { event.preventDefault(); setMenuOpen(true); } }}>⋯</button>
+      {menuOpen && !viewOnly && <div className="zone-settings-menu" id={menuId} role="menu" onKeyDown={handleMenuKeys}>
         <button type="button" role="menuitem" onClick={() => openAction('create')}><Icon name="plus" size={17} />新增設定檔</button>
         <button type="button" role="menuitem" disabled={!settings} onClick={() => openAction('rename')}><ActionIcon name="rename" />重新命名</button>
         <button type="button" role="menuitem" disabled={!settings} onClick={() => openAction('copy')}><ActionIcon name="copy" />建立副本</button>
@@ -325,17 +334,18 @@ export default function ZoneSettingsWorkspace({
       </select><Icon name="chevron" size={16} /></div>
     </header>
     <GroupZonePreviews groups={scopedGroups.map(item => item.id === entry?.groupId && modalOpen && entry.pickupMode ? { ...item, pickupMode: entry.pickupMode } : item)}
-      maps={maps} currentGroupId={group?.id} active={active && (visible || modalOpen)} onSelectGroup={selectGroup} onToggleGroup={onToggleGroup} />
+      maps={maps} currentGroupId={group?.id} active={active && (visible || modalOpen)} onSelectGroup={selectGroup} onToggleGroup={onToggleGroup} viewOnly={viewOnly} />
   </div>;
 
   const editor = microphone ? <ZoneMapPanel compactSettings toolbarStart={settingsControls} toolbarEnd={settingsManagement}
     groupId={group?.id ?? null} groupSelected={Boolean(group)} groups={scopedGroups} microphone={microphone} maps={maps} onMapsChange={updateMaps}
     mapIdentity={`${microphone.id}/${group?.id ?? 'none'}/${settings?.id || 'none'}`} readOnly={!settings} showReferences={false}
-    onAddZoneWithoutSettings={group && !settings ? () => openAction('create', true) : undefined}
+    onAddZoneWithoutSettings={!viewOnly && group && !settings ? () => openAction('create', true) : undefined}
+    viewOnly={viewOnly}
     enabled={!group || enabled} active={active && (visible || modalOpen) && !action}
     disabledMessage={group?.enabled === false ? `請先開啟左側的 ${group.name || group.id} 群組開關，再編輯區域。`
       : group && !enabled ? '請在 Channel Configure 中選擇 Talker Position，再編輯區域。' : undefined}
-    emptyMessage={!scopedGroups.length ? '此麥克風尚未連接攝影機群組。' : !group ? '請先從左側選擇群組，開始設定區域。' : !settings ? scopedSettings.length
+    emptyMessage={!scopedGroups.length ? '此麥克風尚未連接攝影機群組。' : !group ? `請先從左側選擇群組，${viewOnly ? '查看' : '開始設定'}區域。` : viewOnly && !settings ? '此群組尚未設定區域。' : !settings ? scopedSettings.length
       ? '請選擇設定檔，或按 Add Zone 建立新的設定檔與區域。'
       : '請按 Add Zone，建立設定檔與第一個區域。' : undefined} /> : <p className="zone-settings-empty">尚未連接麥克風。</p>;
 
@@ -356,7 +366,7 @@ export default function ZoneSettingsWorkspace({
       </section>
     </div>, document.body)}
     {createPortal(editor, editorHost)}
-    {active && action && <SettingsActionDialog key={`${action.kind}/${action.settingsId || 'new'}`} action={action} settings={actionSettings}
+    {active && action && !viewOnly && <SettingsActionDialog key={`${action.kind}/${action.settingsId || 'new'}`} action={action} settings={actionSettings}
       settingsList={actionSettingsList} groups={actionGroups} assignments={library.assignments}
       onClose={() => setAction(null)} onConfirm={confirmAction} />}
   </>;

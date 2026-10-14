@@ -15,7 +15,7 @@ function CameraIpIcon() {
   )
 }
 
-export default function ManualModeSettings({ visible = true, onDialogOpenChange }) {
+export default function ManualModeSettings({ visible = true, onDialogOpenChange, viewOnly = false }) {
   const outputLayoutId = useId()
   const helpId = useId()
   const [layoutId, setLayoutId] = useState('single')
@@ -32,16 +32,16 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
   const layout = MANUAL_LAYOUTS.find((item) => item.id === layoutId)
   const rows = assignments.slice(0, layout.inputs)
   const dialogAssignment = dialog ? assignments.find((row) => row.number === dialog.number) : null
-  const dialogOpen = visible && !!dialogAssignment
-  const editorAssignment = assignments.find((row) => row.number === presetEditorOutput)
+  const dialogOpen = visible && !viewOnly && !!dialogAssignment
+  const editorAssignment = !viewOnly && assignments.find((row) => row.number === presetEditorOutput)
 
   useEffect(() => {
-    if (!visible) {
+    if (!visible || viewOnly) {
       setDialog(null)
       setPresetEditorOutput(null)
       setShowHelp(false)
     }
-  }, [visible])
+  }, [visible, viewOnly])
 
   useEffect(() => {
     onDialogOpenChange?.(dialogOpen)
@@ -60,22 +60,26 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
   }, [presetEditorOutput, visible])
 
   function changeLayout(value) {
+    if (viewOnly) return
     const nextLayout = MANUAL_LAYOUTS.find((item) => item.id === value)
     setLayoutId(value)
     setSelectedSlot((current) => current > nextLayout.inputs ? null : current)
   }
 
   function updateAssignment(number, changes) {
+    if (viewOnly) return
     setAssignments((current) => current.map((row) => row.number === number ? { ...row, ...changes } : row))
   }
 
   function openDialog(kind, number) {
+    if (viewOnly) return
     setSelectedSlot(number)
     setDialog({ kind, number })
     setShowHelp(false)
   }
 
   function updateCameraState(camera, nextState) {
+    if (viewOnly) return
     setCameraStates((current) => {
       const previous = current[camera] || INITIAL_MANUAL_CAMERA_STATE
       const next = typeof nextState === 'function' ? nextState(previous) : nextState
@@ -84,6 +88,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
   }
 
   function selectPreset(row, preset) {
+    if (viewOnly) return
     updateAssignment(row.number, { preset })
     const number = Number(preset.replace('Preset ', ''))
     const savedState = preset ? savedPresets[row.camera]?.[number] : null
@@ -91,6 +96,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
   }
 
   function openPresetEditor(number) {
+    if (viewOnly) return
     setSelectedSlot(number)
     setPresetEditorOutput(number)
     setShowHelp(false)
@@ -98,6 +104,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
   }
 
   function savePreset(number, cameraState) {
+    if (viewOnly || !editorAssignment) return
     const camera = editorAssignment.camera
     const snapshot = cameraState || cameraStates[camera] || INITIAL_MANUAL_CAMERA_STATE
     setSavedPresets((current) => ({
@@ -128,7 +135,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
       <aside className="manual-mode__layout-panel" aria-label="Manual output layout">
         <label className="manual-mode__layout-label" htmlFor={outputLayoutId}>Select Output Layout</label>
         <div className="manual-mode__select manual-mode__output-select">
-          <select id={outputLayoutId} value={layoutId} onChange={(event) => changeLayout(event.target.value)}>
+          <select id={outputLayoutId} value={layoutId} disabled={viewOnly} onChange={(event) => changeLayout(event.target.value)}>
             {MANUAL_LAYOUTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
           <Icon name="chevron" size={18} />
@@ -195,6 +202,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
                         <select
                           aria-label={`Output ${row.number} camera`}
                           value={row.camera}
+                          disabled={viewOnly}
                           onChange={(event) => updateAssignment(row.number, { camera: event.target.value, preset: '' })}
                         >
                           <option value="">Select camera</option>
@@ -209,7 +217,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
                       <select
                         aria-label={`Output ${row.number} preset`}
                         value={row.preset}
-                        disabled={!row.camera}
+                        disabled={viewOnly || !row.camera}
                         onChange={(event) => selectPreset(row, event.target.value)}
                       >
                         <option value="">Select preset</option>
@@ -232,7 +240,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
                       className="manual-mode__set-preset"
                       ref={(button) => { presetButtonRefs.current[row.number] = button }}
                       aria-label={`Set preset for output ${row.number}`}
-                      disabled={!row.camera}
+                      disabled={viewOnly || !row.camera}
                       onClick={() => openPresetEditor(row.number)}
                     >Set preset</button>
                   </td>
@@ -242,7 +250,7 @@ export default function ManualModeSettings({ visible = true, onDialogOpenChange 
                       className="manual-mode__camera-control"
                       aria-label={`Camera controls for output ${row.number}`}
                       title="Camera controls"
-                      disabled={!row.camera}
+                      disabled={viewOnly || !row.camera}
                       onClick={() => openDialog('camera', row.number)}
                     ><Icon name="camera" size={23} /></button>
                   </td>

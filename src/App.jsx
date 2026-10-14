@@ -11,6 +11,10 @@ import MicrophoneSetup from './components/MicrophoneSetup.jsx'
 import ZoneSettingsWorkspace from './components/ZoneSettingsWorkspace.jsx'
 import ManualModeSettings from './components/ManualModeSettings.jsx'
 import AddGroupDialog from './components/AddGroupDialog.jsx'
+import HomeDashboard from './components/HomeDashboard.jsx'
+import DeviceSettings from './components/DeviceSettings.jsx'
+import HelpSettings from './components/HelpSettings.jsx'
+import UpgradePermissionDialog from './components/UpgradePermissionDialog.jsx'
 import { getMicrophoneGroups, WORKSPACE_MICROPHONE } from './components/workspaceGeometry.js'
 import { SETUP_MICROPHONES, SETUP_GROUPS, SETUP_MAPS } from './components/microphoneSetupData.js'
 
@@ -48,18 +52,7 @@ const initialConfigurations = Object.fromEntries(designVersions.map((version) =>
   }])),
 ]))
 
-function SelectField({ label, value, className = '' }) {
-  return (
-    <div className={`select-field ${className}`}>
-      <select aria-label={label} defaultValue={value}>
-        <option value={value}>{value}</option>
-      </select>
-      <Icon name="chevron" size={18} />
-    </div>
-  )
-}
-
-function GroupItem({ group, selected, onSelect, onToggle }) {
+function GroupItem({ group, selected, onSelect, onToggle, viewOnly = false }) {
   const name = group.name || group.id
   return (
     <div className={`group-item ${selected ? 'is-selected' : ''}`}>
@@ -74,6 +67,7 @@ function GroupItem({ group, selected, onSelect, onToggle }) {
           role="switch"
           aria-checked={group.enabled}
           aria-label={`Enable ${name}`}
+          disabled={viewOnly}
           onClick={onToggle}
         ><span /></button>
         <span className="mic-state"><span className={`status-dot ${group.micIndicator}`} aria-label={`MIC indicator: ${group.micIndicator}`} />MIC</span>
@@ -83,6 +77,13 @@ function GroupItem({ group, selected, onSelect, onToggle }) {
 }
 
 export default function App() {
+  const [settingsVisible, setSettingsVisible] = useState(true)
+  const [settingsSection, setSettingsSection] = useState('Profile')
+  const [accountRole, setAccountRole] = useState('Admin')
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [upgradeError, setUpgradeError] = useState('')
+  const [profileId, setProfileId] = useState(1)
+  const [liveProfileId, setLiveProfileId] = useState(1)
   const [groups, setGroups] = useState(initialGroups)
   const [setupGroups, setSetupGroups] = useState(SETUP_GROUPS)
   const [settingsGroups, setSettingsGroups] = useState(SETUP_GROUPS)
@@ -121,12 +122,68 @@ export default function App() {
   const showMicrophoneZones = isMicrophoneVersion && settingsPage === 'microphones'
   const showManualSettings = settingsPage === 'manual'
   const showAutoSettings = !showMicrophoneZones && !showManualSettings
+  const profileVisible = settingsVisible && settingsSection === 'Profile'
+  const feedbackVisible = settingsSection === 'Profile' && showFeedback
+  const viewOnly = accountRole === 'User'
   const settingsTabs = isMicrophoneVersion ? ['auto', 'manual', 'microphones'] : ['auto', 'manual']
   const detailTabs = designVersion === 'reference' ? ['channel', 'position', 'zone'] : ['channel', 'position']
   const tabTrack = designVersion === 'reference' ? detailTabTracks[selectedDetailTab] : { start: selectedDetailTab === 'position' ? '50%' : '0%', width: '50%' }
   const configuration = configurations[designVersion][currentGroupId]
   const usesMapDialog = designVersion === 'dialog' || designVersion === 'previews' || isMicrophoneVersion
   const setSelectedDetailTab = (tab) => setDetailTabsByVersion((current) => ({ ...current, [designVersion]: tab }))
+
+  const closeSettings = () => {
+    setAddGroupOpen(false)
+    setConfigureOpen(false)
+    setMapSettingOpen(false)
+    setSetupMapOpen(false)
+    setSettingsMapOpen(false)
+    setManualDialogOpen(false)
+    setSettingsVisible(false)
+    requestAnimationFrame(() => document.querySelector('[data-open-settings]')?.focus())
+  }
+
+  const openSettings = () => {
+    const nextSection = viewOnly && !['Profile', 'Help'].includes(settingsSection) ? 'Profile' : settingsSection
+    setSettingsSection(nextSection)
+    setProfileId(liveProfileId)
+    setSettingsVisible(true)
+    requestAnimationFrame(() => {
+      const target = nextSection === 'Profile' ? document.getElementById(`${settingsPage}-tab`)
+        : nextSection === 'Help' ? document.querySelector('.help-settings [aria-selected="true"]')
+          : document.querySelector('.sidebar .nav-item[aria-current="page"]')
+      target?.focus()
+    })
+  }
+
+  const navigateSettings = (section) => {
+    if (!['Device', 'Profile', 'Help'].includes(section) || (viewOnly && !['Profile', 'Help'].includes(section))) return
+    setSettingsSection(section)
+  }
+
+  const selectAccountRole = (role) => {
+    if (role === accountRole) return
+    if (role === 'User') setAccountRole('User')
+    else if (role === 'Admin') {
+      setUpgradeError('')
+      setUpgradeOpen(true)
+    }
+  }
+
+  const closeUpgrade = () => {
+    setUpgradeOpen(false)
+    setUpgradeError('')
+    requestAnimationFrame(() => document.querySelector('[data-account-trigger]')?.focus())
+  }
+
+  const verifyUpgrade = ({ username, password }) => {
+    if (username !== 'demo' || password !== 'demo') {
+      setUpgradeError('Incorrect username or password.')
+      return
+    }
+    setAccountRole('Admin')
+    closeUpgrade()
+  }
 
   const switchDesignVersion = (version) => {
     setMapSettingOpen(false)
@@ -153,6 +210,7 @@ export default function App() {
   }
 
   const saveConfiguration = (nextConfiguration) => {
+    if (viewOnly) return
     setConfigurations((current) => ({
       ...current,
       [designVersion]: { ...current[designVersion], [currentGroupId]: nextConfiguration },
@@ -190,9 +248,9 @@ export default function App() {
     setSelectedDetailTab('zone')
   }
 
-  const toggleGroup = (id) => setGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group))
-  const toggleSetupGroup = (id) => setSetupGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group))
-  const toggleSettingsGroup = (id) => setSettingsGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group))
+  const toggleGroup = (id) => { if (!viewOnly) setGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group)) }
+  const toggleSetupGroup = (id) => { if (!viewOnly) setSetupGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group)) }
+  const toggleSettingsGroup = (id) => { if (!viewOnly) setSettingsGroups((current) => current.map((group) => group.id === id ? { ...group, enabled: !group.enabled } : group)) }
 
   const selectGroup = (id) => {
     if (showZoneSettings) setSelectedSettingsGroupId(id)
@@ -202,6 +260,7 @@ export default function App() {
   }
 
   const addGroup = ({ name, camera, microphoneId, channelCount }) => {
+    if (viewOnly) return
     if (!groupCameras.includes(camera) || !microphones.some((microphone) => microphone.id === microphoneId)
       || !microphoneChannelCounts.includes(channelCount)) return
     const existingNames = new Set(viewGroups.map((group) => (group.name || group.id).toLocaleLowerCase()))
@@ -247,13 +306,18 @@ export default function App() {
   }
 
   return (
-    <div className={`settings-shell design-${designVersion}${showFeedback ? ' is-feedback-page' : ''}`}>
-      <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={addGroupOpen || manualDialogOpen || (usesMapDialog && mapSettingOpen) || (!showFeedback && ((showMicrophoneSetup && setupMapOpen) || (showZoneSettings && settingsMapOpen)))} />
-      <aside className="sidebar" aria-label="Main navigation" hidden={showFeedback}>
+    <>
+    <HomeDashboard visible={!settingsVisible} onOpenSettings={openSettings} profileId={liveProfileId} onProfileChange={setLiveProfileId}
+      accountRole={accountRole} onSelectAccountRole={selectAccountRole} />
+    <div className={`settings-shell design-${designVersion}${feedbackVisible ? ' is-feedback-page' : ''}${viewOnly ? ' is-view-only' : ''}`} hidden={!settingsVisible} inert={settingsVisible ? undefined : ''}>
+      <DesignVersionSwitcher value={showFeedback ? 'feedback' : designVersion} onChange={switchDesignVersion} hidden={!profileVisible || addGroupOpen || manualDialogOpen || (usesMapDialog && mapSettingOpen) || (!showFeedback && ((showMicrophoneSetup && setupMapOpen) || (showZoneSettings && settingsMapOpen)))} />
+      <aside className="sidebar" aria-label="Main navigation" hidden={feedbackVisible}>
         <div className="product-name"><Icon name="device" size={26} /><span>MT300</span></div>
         <nav>
           {sections.map((section) => (
-            <button key={section.label} type="button" className={`nav-item ${section.label === 'Profile' ? 'is-active' : ''}`} aria-current={section.label === 'Profile' ? 'page' : undefined}>
+            <button key={section.label} type="button" className={`nav-item ${section.label === settingsSection ? 'is-active' : ''}`}
+              aria-current={section.label === settingsSection ? 'page' : undefined}
+              disabled={viewOnly && !['Profile', 'Help'].includes(section.label)} onClick={() => navigateSettings(section.label)}>
               <Icon name={section.icon} size={19} /><span>{section.label}</span>
             </button>
           ))}
@@ -261,15 +325,22 @@ export default function App() {
       </aside>
 
       <main className="settings-main">
-        <header className="page-toolbar" hidden={showFeedback}>
-          <SelectField label="Profile" value="Profile 1" className="profile-select" />
+        <header className="page-toolbar" hidden={feedbackVisible || settingsSection === 'Help'}>
+          {settingsSection === 'Profile' ? <div className="select-field profile-select">
+            <select aria-label="Profile" value={profileId} onChange={(event) => setProfileId(Number(event.target.value))}>
+              {Array.from({ length: 8 }, (_, index) => <option key={index + 1} value={index + 1}>Profile {index + 1}</option>)}
+            </select>
+            <Icon name="chevron" size={18} />
+          </div> : <span />}
           <div className="page-actions">
-            <button className="icon-button" type="button" aria-label="Help" title="Help"><Icon name="help" size={24} /></button>
-            <button className="icon-button" type="button" aria-label="Close settings" title="Close settings"><Icon name="close" size={24} /></button>
+            <button className="icon-button" type="button" aria-label="Help" title="Help" onClick={() => navigateSettings('Help')}><Icon name="help" size={24} /></button>
+            <button className="icon-button" type="button" aria-label="Close settings" title="Close settings" onClick={closeSettings}><Icon name="close" size={24} /></button>
           </div>
         </header>
 
-        <div className="mode-tabs" role="tablist" aria-label="Mode settings" hidden={showFeedback}>
+        <DeviceSettings visible={settingsVisible && settingsSection === 'Device'} />
+        <HelpSettings visible={settingsVisible && settingsSection === 'Help'} onClose={closeSettings} />
+        <div className="mode-tabs" role="tablist" aria-label="Mode settings" hidden={!profileVisible || showFeedback}>
           <button className={`mode-tab${showAutoSettings ? ' is-active' : ''}`} id="auto-tab" type="button" role="tab"
             aria-selected={showAutoSettings} aria-controls="auto-settings" tabIndex={showAutoSettings ? 0 : -1}
             onClick={() => setSettingsPage('auto')} onKeyDown={handleSettingsTabKeyDown}>Auto Mode Settings</button>
@@ -281,15 +352,15 @@ export default function App() {
             onClick={() => setSettingsPage('microphones')} onKeyDown={handleSettingsTabKeyDown}>Microphone Zones</button>}
         </div>
 
-        <UserFeedbackPage active={showFeedback} />
-        <ManualModeSettings visible={!showFeedback && showManualSettings} onDialogOpenChange={setManualDialogOpen} />
+        <UserFeedbackPage active={profileVisible && showFeedback} />
+        <ManualModeSettings visible={profileVisible && !showFeedback && showManualSettings} viewOnly={viewOnly} onDialogOpenChange={setManualDialogOpen} />
 
-        <section className="workspace auto-settings-workspace" id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={showFeedback || !showAutoSettings}>
+        <section className="workspace auto-settings-workspace" id="auto-settings" role="tabpanel" aria-labelledby="auto-tab" hidden={!profileVisible || showFeedback || !showAutoSettings}>
           <aside className="group-panel" aria-label="Group settings">
             <div className="output-layout">
               <label htmlFor="output-layout">Select Output Layout</label>
               <div className="select-field">
-                <select id="output-layout" defaultValue="Single">
+                <select id="output-layout" defaultValue="Single" disabled={viewOnly}>
                   <option>Single</option>
                   <option>Side-by-side</option>
                   <option>Active Speaker</option>
@@ -304,11 +375,11 @@ export default function App() {
                 <h2>Select group</h2>
                 <div className="group-heading-actions">
                   <button className="icon-button small" type="button" aria-label="Group help" title="Group help"><Icon name="help" size={18} /></button>
-                  <button className="button add-group" type="button" aria-label="Add group" onClick={() => setAddGroupOpen(true)}><span>Group</span><Icon name="plus" size={16} /></button>
+                  <button className="button add-group" type="button" aria-label="Add group" disabled={viewOnly} onClick={() => setAddGroupOpen(true)}><span>Group</span><Icon name="plus" size={16} /></button>
                 </div>
               </div>
               <div className="group-list">
-                {viewGroups.map((group) => <GroupItem key={group.id} group={group} selected={group.id === currentGroupId} onSelect={() => selectGroup(group.id)} onToggle={() => showZoneSettings ? toggleSettingsGroup(group.id) : showMicrophoneSetup ? toggleSetupGroup(group.id) : toggleGroup(group.id)} />)}
+                {viewGroups.map((group) => <GroupItem key={group.id} group={group} viewOnly={viewOnly} selected={group.id === currentGroupId} onSelect={() => selectGroup(group.id)} onToggle={() => showZoneSettings ? toggleSettingsGroup(group.id) : showMicrophoneSetup ? toggleSetupGroup(group.id) : toggleGroup(group.id)} />)}
               </div>
             </div>
           </aside>
@@ -330,22 +401,22 @@ export default function App() {
               {selectedDetailTab !== 'zone' && <div className="detail-tab-actions">
                 {selectedDetailTab === 'channel' && <button className="button channel-configure-button" type="button" onClick={openConfigure}>Channel Configure</button>}
                 {designVersion === 'previews' && selectedDetailTab === 'channel' && <button className="button zone-map-entry-button" id="zone-map-button" type="button" onClick={() => openMapSetting()}>Zone Map</button>}
-                <button className="button time-button" type="button"><Icon name="clock" size={17} /><span>Time</span></button>
+                <button className="button time-button" type="button" disabled={viewOnly}><Icon name="clock" size={17} /><span>Time</span></button>
               </div>}
             </div>
             <div className="channel-content" id="channel-view" role="tabpanel" aria-labelledby="channel-tab" hidden={selectedDetailTab !== 'channel'}>
               <ChannelPanel groupId={selectedGroup.id} groupName={selectedGroupName}
                 stateKey={`${showZoneSettings ? 'settings' : showMicrophoneSetup ? 'microphones' : 'shared'}/${selectedGroup.id}`}
-                channelCount={selectedGroup.channelCount || 8} emptyInitial={Boolean(selectedGroup.newlyCreated)} searchQuery={channelSearch} />
+                channelCount={selectedGroup.channelCount || 8} emptyInitial={Boolean(selectedGroup.newlyCreated)} searchQuery={channelSearch} viewOnly={viewOnly} />
             </div>
             <div className="position-content" id="position-view" role="tabpanel" aria-labelledby="position-tab" hidden={selectedDetailTab !== 'position'}>
               <div className="position-toolbar">
                 <label htmlFor="position-coverage">Position view</label>
                 <div className="select-field coverage-select">
-                  <select id="position-coverage" defaultValue="Coverage not assigned"><option>Coverage not assigned</option></select>
+                  <select id="position-coverage" defaultValue="Coverage not assigned" disabled={viewOnly}><option>Coverage not assigned</option></select>
                   <Icon name="chevron" size={18} />
                 </div>
-                <button className="button reconfigure-button" type="button">Re-configure</button>
+                <button className="button reconfigure-button" type="button" disabled={viewOnly}>Re-configure</button>
               </div>
               <div className="map-container"><PositionMap groupName={selectedGroupName} /></div>
             </div>
@@ -357,12 +428,12 @@ export default function App() {
               <div key="reference" hidden={designVersion !== 'reference' || configuration.pickupMode !== 'Talker Position'}>
                 <ZoneMapPanel variant="reference" groupId={selectedGroup.id}
                   groups={getMicrophoneGroups(groups, selectedGroup.microphoneId)} microphone={selectedMicrophone}
-                  enabled={selectedGroup.enabled} active={!showFeedback && showAutoSettings && selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
+                  enabled={selectedGroup.enabled} viewOnly={viewOnly} active={profileVisible && !showFeedback && showAutoSettings && selectedDetailTab === 'zone' && designVersion === 'reference' && configuration.pickupMode === 'Talker Position'} />
               </div>
             </div>
           </section>
         </section>
-        <section className="workspace microphone-settings-workspace" id="microphones-settings" role="tabpanel" aria-labelledby="microphones-tab" hidden={showFeedback || !showMicrophoneSetup || !showMicrophoneZones}>
+        <section className="workspace microphone-settings-workspace" id="microphones-settings" role="tabpanel" aria-labelledby="microphones-tab" hidden={!profileVisible || showFeedback || !showMicrophoneSetup || !showMicrophoneZones}>
           <aside className="group-panel" aria-label="Microphone zone navigation">
             <div className="microphone-zones-navigation" ref={setMicrophoneSidebar} />
           </aside>
@@ -371,11 +442,11 @@ export default function App() {
             <MicrophoneSetup microphones={SETUP_MICROPHONES}
               groups={setupGroups.map((group) => ({ ...group, pickupMode: configurations.microphones[group.id].pickupMode }))}
               initialMaps={SETUP_MAPS} preferredGroupId={selectedSetupGroupId} mapRequest={setupMapRequest}
-              sidebarTarget={microphoneSidebar} visible={showMicrophoneSetup && showMicrophoneZones} active={showMicrophoneSetup && !showFeedback && !showManualSettings}
+              sidebarTarget={microphoneSidebar} viewOnly={viewOnly} visible={profileVisible && showMicrophoneSetup && showMicrophoneZones} active={profileVisible && showMicrophoneSetup && !showFeedback && !showManualSettings}
               onToggleGroup={toggleSetupGroup} onMapOpenChange={setSetupMapOpen} />
           </section>
         </section>
-        <section className="workspace microphone-settings-workspace zone-settings-library-workspace" id="zone-settings-library" role="tabpanel" aria-labelledby="microphones-tab" hidden={showFeedback || !showZoneSettings || !showMicrophoneZones}>
+        <section className="workspace microphone-settings-workspace zone-settings-library-workspace" id="zone-settings-library" role="tabpanel" aria-labelledby="microphones-tab" hidden={!profileVisible || showFeedback || !showZoneSettings || !showMicrophoneZones}>
           <aside className="group-panel" aria-label="Microphone zone navigation">
             <div className="microphone-zones-navigation" ref={setSettingsSidebar} />
           </aside>
@@ -383,17 +454,19 @@ export default function App() {
             <ZoneSettingsWorkspace microphones={SETUP_MICROPHONES}
               groups={settingsGroups.map((group) => ({ ...group, pickupMode: configurations.settings[group.id].pickupMode }))}
               initialMaps={SETUP_MAPS} mapRequest={settingsMapRequest}
-              sidebarTarget={settingsSidebar} visible={showZoneSettings && showMicrophoneZones} active={showZoneSettings && !showFeedback && !showManualSettings}
+              sidebarTarget={settingsSidebar} viewOnly={viewOnly} visible={profileVisible && showZoneSettings && showMicrophoneZones} active={profileVisible && showZoneSettings && !showFeedback && !showManualSettings}
               onToggleGroup={toggleSettingsGroup} onMapOpenChange={setSettingsMapOpen} />
           </section>
         </section>
       </main>
-      <AddGroupDialog open={addGroupOpen} cameras={groupCameras} microphones={microphones}
+      <AddGroupDialog open={profileVisible && !viewOnly && addGroupOpen} cameras={groupCameras} microphones={microphones}
         channelCounts={microphoneChannelCounts} existingNames={viewGroups.map((group) => group.name || group.id)}
         onClose={() => setAddGroupOpen(false)} onSave={addGroup} />
-      <ChannelConfigureDialog open={configureOpen} suspended={mapSettingOpen || setupMapOpen || settingsMapOpen} groupId={selectedGroupName} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
-      <MapSettingDialog microphone={mapEntryMicrophone} open={designVersion === 'dialog' && mapSettingOpen} groups={getMicrophoneGroups(groups, mapEntryMicrophone.id).map((group) => ({ ...group, pickupMode: configurations.dialog[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
-      <MapSettingDialog variant="previews" microphone={mapEntryMicrophone} open={designVersion === 'previews' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.previews[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
+      <ChannelConfigureDialog viewOnly={viewOnly} open={profileVisible && configureOpen} suspended={mapSettingOpen || setupMapOpen || settingsMapOpen} groupId={selectedGroupName} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
+      <MapSettingDialog microphone={mapEntryMicrophone} viewOnly={viewOnly} open={profileVisible && designVersion === 'dialog' && mapSettingOpen} groups={getMicrophoneGroups(groups, mapEntryMicrophone.id).map((group) => ({ ...group, pickupMode: configurations.dialog[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
+      <MapSettingDialog variant="previews" microphone={mapEntryMicrophone} viewOnly={viewOnly} open={profileVisible && designVersion === 'previews' && mapSettingOpen} groups={groups.map((group) => ({ ...group, pickupMode: configurations.previews[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
     </div>
+    <UpgradePermissionDialog open={!settingsVisible && upgradeOpen} onClose={closeUpgrade} onVerify={verifyUpgrade} error={upgradeError} />
+    </>
   )
 }

@@ -1,0 +1,152 @@
+.device-settings {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  margin-top: 16px;
+  padding: 32px 48px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.device-settings[hidden] { display: none !important; }
+
+.device-settings__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.device-settings__header h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.device-settings__add {
+  min-width: 132px;
+  height: 36px;
+  padding: 0 20px;
+  border: 1px solid var(--blue);
+  border-radius: 4px;
+  background: var(--blue);
+  color: white;
+  font-size: 14px;
+}
+
+.device-settings__add:hover:not(:disabled) { background: var(--blue-dark); border-color: var(--blue-dark); }
+.device-settings__add:disabled { opacity: .55; }
+
+.device-settings__columns {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 0;
+  padding-top: 28px;
+}
+
+.device-settings__list-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.device-settings__list-column + .device-settings__list-column { border-left: 1px solid var(--line-2); }
+
+.device-settings__list-column h2 {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 24px 24px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--dim);
+}
+
+.device-settings__list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  margin: 0 12px;
+  padding: 0 32px 12px;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--faint) transparent;
+}
+
+.device-settings__list:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+.device-settings__card {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 520px;
+  min-height: 78px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  border: 1px solid var(--line-2);
+  border-radius: 5px;
+  background: var(--panel-2);
+}
+
+.device-settings__name {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.device-settings__connection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.device-settings__connection > span:last-child { overflow-wrap: anywhere; }
+.device-settings__connection > svg { color: #c7cdd3; }
+.device-settings__camera-icon { position: relative; display: inline-flex; flex: 0 0 28px; width: 28px; height: 24px; color: #c7cdd3; }
+.device-settings__connection-type { position: absolute; right: 0; bottom: 0; padding: 0 2px; border-radius: 2px; background: #c7cdd3; color: var(--panel); font-size: 7px; line-height: 9px; font-weight: 700; }
+
+@media (max-width: 1199px) {
+  .device-settings { padding: 24px; }
+  .device-settings__list { gap: 20px; padding: 0 16px 12px; margin: 0 8px; }
+  .device-settings__list-column h2 { padding: 0 24px 20px; }
+  .device-settings__card { padding: 12px 16px; }
+}
+
+@media (max-width: 899px) {
+  .device-settings { flex: none; }
+  .device-settings__list { max-height: 550px; }
+}
+
+@media (max-width: 639px) {
+  .device-settings { padding: 20px 16px; }
+  .device-settings__header { gap: 12px; }
+  .device-settings__header h1 { font-size: 18px; }
+  .device-settings__add { min-width: 112px; padding: 0 12px; }
+  .device-settings__columns { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-top: 24px; }
+  .device-settings__list-column + .device-settings__list-column { border-top: 1px solid var(--line-2); border-left: 0; padding-top: 24px; }
+  .device-settings__list-column h2 { padding: 0 8px 16px; }
+  .device-settings__list { max-height: 420px; margin: 0; padding: 0 8px 8px; gap: 16px; }
+}
