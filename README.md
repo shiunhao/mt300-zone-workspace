@@ -18,7 +18,8 @@ npm run build
 ## 本次範圍
 
 - 設定頁右上角 X 可返回首頁，首頁齒輪可重新進入設定，保留設計版本、模式、群組與地圖資料。首頁 Live Mode 關閉時顯示辦公室靜態 Live View、八組 Profile N Auto Mode、音訊圖示、Device Status 與帳號選單；開啟時改為六種布局工具列、可拖放／點選配置的四個輸出位置、右側 PTZ／AF／Zoom／Preset 與八張攝影機縮圖。布局與首頁往返保留本次配置，PTZ 僅操作示範圖片與前端數值，Preset 只示範選取，沒有實際串流、設備控制或 Preset API。Device Status 的 0／2/8 是依參考圖顯示的靜態示範值。Reset 暫停用，待確認要清除的範圍。
-- 首頁 Profile 有八組，進入設定時同步顯示所選編號；在設定頁選取另一個 Profile 屬於查看行為，不會改變首頁使用的 Profile。各 Profile 的獨立配置資料尚未實作，目前仍共用原型設定。
+- 首頁 Profile 有八組，選單收合與展開時皆以白色顯示 Profile N、藍色顯示 Auto Mode，支援滑鼠與鍵盤操作；進入設定時同步顯示所選編號。在設定頁選取另一個 Profile 屬於查看行為，不會改變首頁使用的 Profile。各 Profile 的獨立配置資料尚未實作，目前仍共用原型設定。
+- 首頁設定齒輪改為置中的八齒圖示。首頁 Live View 圖片改用 `src/assets/office-empty-desk-v2.png`，將室內盆栽換成文件盤、筆筒、資料夾與印表機；由內建 image_gen 編輯，完整提示見 `src/assets/office-preview-v2.md`。Manual Mode 預覽仍使用原圖。
 - 帳號選單提供 Admin／User。切到 User 不需輸入；User 切回 Admin 開啟 Upgrade Permission，原型使用示範帳密 `demo`／`demo`，錯誤輸入顯示訊息，Cancel／X／Escape 關閉且清除輸入。此為前端示範，不是設備驗證或正式權限機制；沒有傳送、記錄或持久保存輸入的帳密。User 可直接進入 Settings，只可查看 Help／Profile，Device 與其他設定導覽停用。Profile 保留群組、分頁、搜尋、分頁與地圖視角瀏覽；群組開關、Channel、Manual、設定檔與區域編輯都停用並加上操作守衛。Channel Configure 可唯讀查看，包含 V2 的 Map Setting 入口；返回 Admin 後恢復操作，原有設定保留。
 - Device 頁依參考圖列出八台攝影機與七個麥克風，兩欄清單獨立捲動，IP／USB Port 只作文字展示；未提供的位址顯示「—」。Add device 流程尚未提供，因此按鈕暫停用。Help 提供 Manual、About、Privacy Policy、Console 子頁籤；Manual 顯示 Online Software User Manual／Read，Read 連結與其他三頁內容尚待補充，沒有執行 Console 指令。
 - Profile／Auto Mode Settings／Group 清單／Channel、Active Position 與新版 Zone Map (Talker Position) 分頁。

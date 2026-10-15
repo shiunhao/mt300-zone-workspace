@@ -1,9 +1,10 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import Icon from './Icon.jsx'
 import HomePtzPanel from './HomePtzPanel.jsx'
 import AccountMenu from './AccountMenu.jsx'
-import officeImage from '../assets/office-empty-desk.png'
-import { HOME_DEVICES, HOME_LAYOUTS, HOME_PRESET_NUMBERS, HOME_PROFILES, INITIAL_HOME_CAMERA_STATE } from './homeDashboardData.js'
+import HomeProfileSelect from './HomeProfileSelect.jsx'
+import officeImage from '../assets/office-empty-desk-v2.png'
+import { HOME_DEVICES, HOME_LAYOUTS, HOME_PRESET_NUMBERS, INITIAL_HOME_CAMERA_STATE } from './homeDashboardData.js'
 import './HomeDashboard.css'
 
 function LayoutIcon({ layout }) {
@@ -23,7 +24,6 @@ function DropCameraIcon() {
 }
 
 export default function HomeDashboard({ visible = true, onOpenSettings, profileId = 1, onProfileChange, resetBehavior, accountRole = 'Admin', onSelectAccountRole }) {
-  const profileSelectId = useId()
   const [liveMode, setLiveMode] = useState(false)
   const [layoutId, setLayoutId] = useState('single')
   const [assignments, setAssignments] = useState([null, null, null, null])
@@ -80,10 +80,8 @@ export default function HomeDashboard({ visible = true, onOpenSettings, profileI
           <button id="home-live-mode" type="button" className={`home-dashboard__switch${liveMode ? ' is-on' : ''}`} role="switch" aria-checked={liveMode} aria-label="Live Mode" onClick={() => { setLiveMode((current) => !current); setArmedDevice(null) }}><span /></button>
         </div>
         <div className="home-dashboard__profile-area">
-          {liveMode ? <button type="button" className="button home-dashboard__reset" onClick={resetLiveView} disabled={resetBehavior !== 'clear'} title="Reset Live View">Reset</button> : <>
-            <label className="home-dashboard__sr-only" htmlFor={profileSelectId}>Live profile</label>
-            <div className="select-field home-dashboard__profile-select"><select id={profileSelectId} value={profileId} onChange={(event) => onProfileChange?.(Number(event.target.value))}>{HOME_PROFILES.map((profile) => <option key={profile.id} value={profile.id}>{profile.label}</option>)}</select><Icon name="chevron" size={17} /></div>
-          </>}
+          {liveMode ? <button type="button" className="button home-dashboard__reset" onClick={resetLiveView} disabled={resetBehavior !== 'clear'} title="Reset Live View">Reset</button>
+            : <HomeProfileSelect value={profileId} onChange={onProfileChange} active={visible} />}
         </div>
         {!liveMode && <div className="home-dashboard__audio" aria-label="Audio activity"><Icon name="ndi" size={34} /><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="currentColor" /><path d="m5 3 5 4-5 4z" fill="var(--page)" /></svg></div>}
         <div className="home-dashboard__header-spacer" />
