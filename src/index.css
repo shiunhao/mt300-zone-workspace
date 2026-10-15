@@ -120,7 +120,6 @@ svg { flex-shrink: 0; }
 .detail-tabbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--page); min-height: 44px; padding-right: 16px; gap: 8px 12px; }
 .detail-tab-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 8px 0; }
 .channel-configure-button { height: 28px; padding: 0 10px; font-size: 12px; }
-.zone-map-entry-button { height: 28px; padding: 0 10px; font-size: 12px; }
 .channel-content { flex: 1; min-width: 0; }
 .group-detail [hidden] { display: none; }
 .channel-content:not([hidden]), .position-content:not([hidden]), .zone-content:not([hidden]) { animation: detail-panel-enter 230ms cubic-bezier(.22, 1, .36, 1) both; }

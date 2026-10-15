@@ -1,6 +1,6 @@
 import { WORKSPACE_MICROPHONE, createWorkspaceMaps } from './workspaceGeometry';
 
-// V4-only sample devices keep the earlier design comparisons unchanged.
+// Microphone-focused sample devices keep the earlier design comparisons unchanged.
 export const SETUP_MICROPHONES = [
   WORKSPACE_MICROPHONE,
   { id: 'MIC-02', model: 'Shure MXA925-S' },

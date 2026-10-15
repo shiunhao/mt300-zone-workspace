@@ -14,18 +14,13 @@ const versions = [
     label: 'Map Setting Dialog',
   },
   {
-    value: 'previews',
-    code: 'V3',
-    label: 'Group Previews',
-  },
-  {
     value: 'microphones',
-    code: 'V4',
+    code: 'V3',
     label: 'Microphone Setup',
   },
   {
     value: 'settings',
-    code: 'V5',
+    code: 'V4',
     label: 'Zone Settings Library',
   },
   {

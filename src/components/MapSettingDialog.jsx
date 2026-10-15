@@ -23,7 +23,6 @@ export default function MapSettingDialog({
   viewOnly = false,
 }) {
   const titleId = useId();
-  const groupSelectId = useId();
   const statusId = useId();
   const dialogRef = useRef(null);
   const [editingGroupId, setEditingGroupId] = useState(initialGroupId);
@@ -41,12 +40,14 @@ export default function MapSettingDialog({
   useDialogFocus(open && !embedded, dialogRef, onClose);
 
   const scopedGroups = hasPreviews ? getMicrophoneGroups(groups, microphone.id) : groups;
-  const selectedGroup = scopedGroups.find((group) => group.id === editingGroupId)
-    || scopedGroups.find((group) => group.id === initialGroupId) || scopedGroups[0];
+  const selectedGroup = hasPreviews
+    ? scopedGroups.find((group) => group.id === editingGroupId)
+      || scopedGroups.find((group) => group.id === initialGroupId) || scopedGroups[0]
+    : scopedGroups.find((group) => group.id === initialGroupId);
   const groupId = selectedGroup?.id || '';
   const groupName = selectedGroup?.name || groupId;
   // The entry group may be using the still-open Channel Configure draft.
-  // Switching groups never changes that draft or another group's Pickup Mode.
+  // Only the previews design can switch groups; it never changes that draft.
   const pickupMode = groupId === initialGroupId && entryPickupMode
     ? entryPickupMode : selectedGroup?.pickupMode || 'Talker Position';
   const talkerPosition = pickupMode === 'Talker Position';
@@ -96,18 +97,10 @@ export default function MapSettingDialog({
             <div><h2 id={titleId}>Zone Map · {microphone.id}</h2><p>{microphone.model}</p></div>
           </div> : <h2 id={titleId}>Zone Map</h2>}
           {!hasPreviews && <div className="map-setting-dialog__group-controls">
-            <label htmlFor={groupSelectId}>Group</label>
-            <div className="select-field map-setting-dialog__group-select">
-              <select
-                id={groupSelectId}
-                value={groupId}
-                disabled={!open || !groups.length}
-                data-initial-focus
-                onChange={(event) => setEditingGroupId(event.target.value)}
-              >
-                {groups.map((group) => <option key={group.id} value={group.id}>{group.name || group.id} · {group.camera}</option>)}
-              </select>
-              <Icon name="chevron" size={16} />
+            <div className="map-setting-dialog__group-context">
+              <span>Group</span>
+              <strong>{groupName || 'Unavailable'}</strong>
+              {selectedGroup?.camera && <span className="map-setting-dialog__group-camera">{selectedGroup.camera}</span>}
             </div>
             <span className="map-setting-dialog__enable-label">Enabled</span>
             <button
@@ -124,6 +117,7 @@ export default function MapSettingDialog({
             className="icon-button map-setting-dialog__close"
             type="button"
             aria-label="Close map setting"
+            data-initial-focus={!hasPreviews ? '' : undefined}
             disabled={!open}
             onClick={onClose}
           ><Icon name="close" size={22} /></button>
@@ -144,7 +138,9 @@ export default function MapSettingDialog({
               onMapsChange={hasPreviews ? setPreviewMaps : undefined}
               showReferences={!hasPreviews}
               viewOnly={viewOnly}
-            /> : <p className="map-setting-dialog__empty">No camera groups connected to {microphone.id}.</p>}
+            /> : <p className="map-setting-dialog__empty">{hasPreviews
+              ? `No camera groups connected to ${microphone.id}.`
+              : 'The selected group is no longer available.'}</p>}
           </div>
         </div>
       </section>;
