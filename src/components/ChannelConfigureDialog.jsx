@@ -86,7 +86,6 @@ export default function ChannelConfigureDialog({
   mapTargetLabel = 'Zone Map tab',
   viewOnly = false,
 }) {
-  const titleId = useId();
   const pickupId = useId();
   const channelId = useId();
   const dialogRef = useRef(null);
@@ -111,16 +110,13 @@ export default function ChannelConfigureDialog({
         ref={dialogRef}
         role="dialog"
         aria-modal={suspended ? undefined : 'true'}
-        aria-labelledby={titleId}
+        aria-label="Channel Configure"
+        aria-description={`${groupId} microphone settings`}
         tabIndex={-1}
         data-mt-dialog
         data-modal-level="1000"
       >
         <header className="configure-dialog__header">
-          <div>
-            <h2 id={titleId}>Channel Configure</h2>
-            <span className="configure-dialog__group">{groupId} · Microphone settings</span>
-          </div>
           <button type="button" className="icon-button" aria-label="Close channel configuration" onClick={onClose}>
             <Icon name="close" size={22} />
           </button>

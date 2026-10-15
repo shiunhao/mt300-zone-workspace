@@ -28,20 +28,12 @@
 .configure-dialog__header {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   padding: 20px 20px 16px 24px;
   border-bottom: 1px solid var(--line);
 }
 
-.configure-dialog__header h2 {
-  margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
-}
-
-.configure-dialog__group { font-size: 12px; color: var(--dim); }
 .configure-dialog__header .icon-button { margin-top: -3px; }
 .configure-dialog__body { display: flex; flex-direction: column; gap: 24px; padding: 24px; font-size: 14px; }
 .configure-dialog__model { display: flex; flex-direction: column; gap: 5px; }

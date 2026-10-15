@@ -96,23 +96,6 @@ export default function MapSettingDialog({
             </svg>
             <div><h2 id={titleId}>Zone Map · {microphone.id}</h2><p>{microphone.model}</p></div>
           </div> : <h2 id={titleId}>Zone Map</h2>}
-          {!hasPreviews && <div className="map-setting-dialog__group-controls">
-            <div className="map-setting-dialog__group-context">
-              <span>Group</span>
-              <strong>{groupName || 'Unavailable'}</strong>
-              {selectedGroup?.camera && <span className="map-setting-dialog__group-camera">{selectedGroup.camera}</span>}
-            </div>
-            <span className="map-setting-dialog__enable-label">Enabled</span>
-            <button
-              className={`switch${groupEnabled ? ' is-on' : ''}`}
-              type="button"
-              role="switch"
-              aria-checked={groupEnabled}
-              aria-label={`Enable ${groupName} in map setting`}
-              disabled={viewOnly || !open || !selectedGroup || !onToggleGroup}
-              onClick={() => { if (!viewOnly) onToggleGroup?.(groupId); }}
-            ><span /></button>
-          </div>}
           <button
             className="icon-button map-setting-dialog__close"
             type="button"
