@@ -36,16 +36,17 @@ const INITIAL_GROUPS = {
   ],
 };
 const copyZones = (zones) => zones.map((zone) => ({ ...zone }));
+const centimeters = (meters) => Math.round(meters * UNITS_PER_METER);
 
 function rangeWarning(value, { min, max }) {
   const reason = value > max ? 'too large' : value < min ? 'too small' : '';
-  return reason ? `Value is ${reason}.\nMinimum: ${min} m · Maximum: ${max} m.` : '';
+  return reason ? `Value is ${reason}.\nMinimum: ${centimeters(min)} CM · Maximum: ${centimeters(max)} CM.` : '';
 }
 
 function NumericField({ label, value, min, max, disabled, onCommit }) {
   const inputRef = useRef(null);
   const dirty = useRef(false);
-  const formattedValue = String(Math.round(value * 10) / 10);
+  const formattedValue = String(centimeters(value));
   const [input, setInput] = useState(formattedValue);
   const [warning, setWarning] = useState('');
   const [lastValue, setLastValue] = useState(value);
@@ -69,19 +70,18 @@ function NumericField({ label, value, min, max, disabled, onCommit }) {
       setWarning('Enter a valid number.');
       return;
     }
-    const requested = Math.round(next * 10) / 10;
+    const requested = Math.round(next) / UNITS_PER_METER;
     const rangeError = rangeWarning(requested, { min, max });
     if (rangeError) { setWarning(rangeError); return; }
     const rejected = onCommit(requested);
     setWarning(rejected || '');
-    if (!rejected) setInput(String(requested));
+    if (!rejected) setInput(String(centimeters(requested)));
   }
   function changeInput(event) {
     if (disabled) return;
     const next = event.target.value;
-    if (!/^-?\d*(?:\.\d*)?$/.test(next)) return;
-    const decimal = next.indexOf('.');
-    setInput(decimal === -1 ? next : next.slice(0, decimal + 2));
+    if (!/^-?\d*$/.test(next)) return;
+    setInput(next);
     dirty.current = true;
   }
   function dismissWarning() {
@@ -92,7 +92,7 @@ function NumericField({ label, value, min, max, disabled, onCommit }) {
   return (
     <><label className="zone-map__number-field">
       <span>{label}</span>
-      <div><input ref={inputRef} type="number" step="0.1" min={min} max={max} inputMode="decimal" value={input} aria-label={`${label} in meters`} disabled={disabled}
+      <div><input ref={inputRef} type="number" step="1" min={centimeters(min)} max={centimeters(max)} inputMode="numeric" value={input} aria-label={`${label} in centimeters`} disabled={disabled}
         onChange={changeInput} onBlur={commit}
         onKeyDown={(event) => {
           if (!disabled && event.key === 'Enter') {
@@ -100,7 +100,7 @@ function NumericField({ label, value, min, max, disabled, onCommit }) {
             event.stopPropagation();
             event.currentTarget.blur();
           }
-        }} /><span className="zone-map__unit" aria-hidden="true">m</span></div>
+        }} /><span className="zone-map__unit" aria-hidden="true">CM</span></div>
     </label><WarningDialog open={Boolean(warning)} message={warning} onClose={dismissWarning} returnFocusRef={inputRef} /></>
   );
 }
@@ -449,7 +449,7 @@ export default function ZoneMapPanel({
     const conflicting = isOwn && activePreview?.zone.id === zone.id && activePreview.conflicting;
     const muted = isOverview && owner.enabled === false;
     const label = isWorkspace ? `${owner.name || owner.id} · ${zone.name}` : zone.name;
-    return <g key={`${owner.id}-${zone.id}`} className={`zone-map__zone ${selected ? 'is-selected' : ''} ${zoneEditable ? 'is-editable' : ''}${conflicting ? ' is-conflicting' : ''}${isOverview ? ' zone-map__overview-zone' : ''}${muted ? ' is-group-disabled' : ''}`} style={isOverview ? { '--group-zone-color': muted ? '#77828f' : getGroupReferenceColor(owner.id) } : undefined} data-zone-group={owner.id} data-zone-id={zone.id} role="button" tabIndex={enabled ? 0 : -1} aria-disabled={!enabled} aria-invalid={conflicting || undefined} aria-label={`${label}, X ${zone.x}, Y ${zone.y}, width ${zone.width}, height ${zone.height} meters`} aria-pressed={selected} onClick={() => selectZone(zone.id, owner.id)} onKeyDown={(event) => zoneKeyDown(event, zone, owner.id)} onPointerDown={(event) => { if (zoneEditable) beginDrag(event, zone); }}>
+    return <g key={`${owner.id}-${zone.id}`} className={`zone-map__zone ${selected ? 'is-selected' : ''} ${zoneEditable ? 'is-editable' : ''}${conflicting ? ' is-conflicting' : ''}${isOverview ? ' zone-map__overview-zone' : ''}${muted ? ' is-group-disabled' : ''}`} style={isOverview ? { '--group-zone-color': muted ? '#77828f' : getGroupReferenceColor(owner.id) } : undefined} data-zone-group={owner.id} data-zone-id={zone.id} role="button" tabIndex={enabled ? 0 : -1} aria-disabled={!enabled} aria-invalid={conflicting || undefined} aria-label={`${label}, X ${centimeters(zone.x)}, Y ${centimeters(zone.y)}, width ${centimeters(zone.width)}, height ${centimeters(zone.height)} centimeters`} aria-pressed={selected} onClick={() => selectZone(zone.id, owner.id)} onKeyDown={(event) => zoneKeyDown(event, zone, owner.id)} onPointerDown={(event) => { if (zoneEditable) beginDrag(event, zone); }}>
       <rect {...rect} rx="3" /><text x={rect.x + rect.width / 2} y={rect.y + rect.height / 2} textAnchor="middle" dominantBaseline="central">{zone.name.replace(/^Zone\s+/, '')}</text>
       {selected && zoneEditable && RESIZE_CORNERS.map((corner) => <rect key={corner.id} className={`zone-map__resize-handle zone-map__resize-handle--${corner.id}`} data-resize-corner={corner.id} x={(corner.id.includes('w') ? rect.x : rect.x + rect.width) - 8} y={(corner.id.includes('n') ? rect.y : rect.y + rect.height) - 8} width="16" height="16" rx="2" role="button" tabIndex="0" aria-label={`Resize ${zone.name} from ${corner.label} corner`} onPointerDown={(event) => beginDrag(event, zone, 'resize', corner.id)} onKeyDown={(event) => resizeKeyDown(event, zone, corner.id)}><title>Resize {zone.name} from {corner.label} corner</title></rect>)}
     </g>;
@@ -478,7 +478,7 @@ export default function ZoneMapPanel({
             {isWorkspace ? <div className="zone-map__workspace-toolbar-slot">{toolbarSlot}</div> : showReferences && <GroupReferenceDropdown groups={referenceOptions} checked={references} disabled={!isInteractive || !hasReferenceZones} disabledReason={referenceDisabledReason} onChange={changeReference} />}
           </div>
           <div className={`zone-map__canvas-wrap${hasVisibleZones ? '' : ' is-empty'}`} ref={mapRef}>
-            <svg ref={svgRef} className={`zone-map__canvas${isPanning ? ' is-panning' : ''}`} viewBox={viewBox} data-grid-cells={GRID_CELLS} data-cell-size={CELL_SIZE} data-cell-meters={MIN_ZONE_SIZE} tabIndex={mapInteractive ? undefined : -1} aria-disabled={!mapInteractive} aria-label="Coverage zone map, 51 by 51 cells, each cell 0.6 meters, microphone at origin" onClick={canvasClick} onPointerDown={beginPan} onPointerMove={movePointer} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={cancelGesture}>
+            <svg ref={svgRef} className={`zone-map__canvas${isPanning ? ' is-panning' : ''}`} viewBox={viewBox} data-grid-cells={GRID_CELLS} data-cell-size={CELL_SIZE} data-cell-meters={MIN_ZONE_SIZE} tabIndex={mapInteractive ? undefined : -1} aria-disabled={!mapInteractive} aria-label="Coverage zone map, 51 by 51 cells, each cell 60 centimeters, microphone at origin" onClick={canvasClick} onPointerDown={beginPan} onPointerMove={movePointer} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={cancelGesture}>
               <rect x="0" y="0" width={WORLD_SIZE} height={WORLD_SIZE} fill="#252b32" />
               <g className="zone-map__grid" pointerEvents="none" aria-hidden="true">{GRID_LINES.map((position) => <path key={position} d={`M${position} 0V${WORLD_SIZE}M0 ${position}H${WORLD_SIZE}`} fill="none" stroke="#3a424c" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />)}</g>
               <rect x="0" y="0" width={WORLD_SIZE} height={WORLD_SIZE} fill="none" stroke="#626e7b" strokeWidth="2" vectorEffect="non-scaling-stroke" />

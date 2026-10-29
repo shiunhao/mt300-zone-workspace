@@ -56,13 +56,13 @@ export function visibleMapBounds({ panX, panY, visibleWidth, visibleHeight, inse
 }
 
 export function zoneFieldLimits(zone, bounds = MAP_BOUNDS) {
-  const ceilTenth = (value) => Math.ceil(value * 10 - 0.000001) / 10;
-  const floorTenth = (value) => Math.floor(value * 10 + 0.000001) / 10;
+  const ceilCentimeter = (value) => Math.ceil(value * 100 - 0.000001) / 100;
+  const floorCentimeter = (value) => Math.floor(value * 100 + 0.000001) / 100;
   return {
-    x: { min: ceilTenth(bounds.left + zone.width / 2), max: floorTenth(bounds.right - zone.width / 2) },
-    y: { min: ceilTenth(bounds.bottom + zone.height / 2), max: floorTenth(bounds.top - zone.height / 2) },
-    width: { min: MIN_ZONE_SIZE, max: floorTenth(2 * Math.min(zone.x - bounds.left, bounds.right - zone.x)) },
-    height: { min: MIN_ZONE_SIZE, max: floorTenth(2 * Math.min(zone.y - bounds.bottom, bounds.top - zone.y)) },
+    x: { min: ceilCentimeter(bounds.left + zone.width / 2), max: floorCentimeter(bounds.right - zone.width / 2) },
+    y: { min: ceilCentimeter(bounds.bottom + zone.height / 2), max: floorCentimeter(bounds.top - zone.height / 2) },
+    width: { min: MIN_ZONE_SIZE, max: floorCentimeter(2 * Math.min(zone.x - bounds.left, bounds.right - zone.x)) },
+    height: { min: MIN_ZONE_SIZE, max: floorCentimeter(2 * Math.min(zone.y - bounds.bottom, bounds.top - zone.y)) },
   };
 }
 

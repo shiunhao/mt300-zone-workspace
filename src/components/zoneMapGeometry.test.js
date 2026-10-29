@@ -55,15 +55,28 @@ test('visible bounds follow pan, include the SVG viewport, and stop at the world
   assert.deepEqual(all, { left: -MAP_EXTENT, right: MAP_EXTENT, bottom: -MAP_EXTENT, top: MAP_EXTENT });
 });
 
-test('field maxima keep the center fixed and round inward to one decimal', () => {
+test('field maxima keep the center fixed and round inward to centimeter precision', () => {
   const limits = zoneFieldLimits({ ...zone, x: 2, y: 1, height: 1.5 }, view);
   assert.deepEqual(limits, {
-    x: { min: -5, max: 5 }, y: { min: -3.2, max: 3.2 },
+    x: { min: -5, max: 5 }, y: { min: -3.25, max: 3.25 },
     width: { min: 0.6, max: 8 }, height: { min: 0.6, max: 6 },
   });
   assert.ok(9999 > limits.width.max && 9999 > limits.x.max);
   const narrow = zoneFieldLimits(zone, { ...view, right: 1.234 });
-  assert.equal(narrow.width.max, 2.4);
+  assert.equal(narrow.width.max, 2.46);
+});
+
+test('centimeter inputs can reach the map edge without rounding beyond it', () => {
+  const current = { ...zone, width: 3.5, height: 2.5 };
+  const limits = zoneFieldLimits(current);
+  assert.equal(Math.round(limits.x.min * 100), -1355);
+  assert.equal(Math.round(limits.x.max * 100), 1355);
+  const atEdge = constrainZone({ ...current, x: 1355 / 100 });
+  near(edges(atEdge).right, MAP_EXTENT);
+  assert.equal(atEdge.x, 13.55);
+  const oddSize = zoneFieldLimits({ ...current, width: 0.61 });
+  assert.equal(Math.round(oddSize.x.max * 100), 1499);
+  assert.equal(Math.round(oddSize.x.min * 100), -1499);
 });
 
 test('numeric entries may leave the viewport but must keep the zone inside the full map', () => {
