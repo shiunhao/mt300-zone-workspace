@@ -1,4 +1,5 @@
 import { getGroupReferenceColor } from './groupReferenceColors';
+import { CELL_SIZE, ORIGIN } from './zoneMapGeometry';
 import './GroupZonePreviews.css';
 
 // All cards share an origin and scale. Expand their common view when a zone
@@ -19,8 +20,10 @@ function previewView(maps) {
 
 function PreviewMap({ group, zones, view }) {
   const { halfWidth, halfHeight } = view;
-  const gridExtent = 1275;
-  const gridLines = Array.from({ length: 52 }, (_, index) => index * 50 - gridExtent);
+  const gridExtent = ORIGIN;
+  const cellSize = CELL_SIZE;
+  const linesEachSide = Math.floor(gridExtent / cellSize);
+  const gridLines = Array.from({ length: linesEachSide * 2 + 1 }, (_, index) => (index - linesEachSide) * cellSize);
   return <svg className="group-zone-previews__map" viewBox={`${-halfWidth} ${-halfHeight} ${halfWidth * 2} ${halfHeight * 2}`}
     role="img" aria-label={`${group.name || group.id} zone preview`}>
     <g className="group-zone-previews__grid" aria-hidden="true">

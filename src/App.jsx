@@ -77,6 +77,7 @@ function GroupItem({ group, selected, onSelect, onToggle, viewOnly = false }) {
 }
 
 export default function App() {
+  const talkerPositionPreview = new URLSearchParams(window.location.search).get('view') === 'talker-position'
   const [settingsVisible, setSettingsVisible] = useState(true)
   const [settingsSection, setSettingsSection] = useState('Profile')
   const [accountRole, setAccountRole] = useState('Admin')
@@ -90,14 +91,14 @@ export default function App() {
   const [selectedGroupId, setSelectedGroupId] = useState('G2')
   const [selectedSetupGroupId, setSelectedSetupGroupId] = useState('G2')
   const [selectedSettingsGroupId, setSelectedSettingsGroupId] = useState('G2')
-  const [designVersion, setDesignVersion] = useState('settings')
+  const [designVersion, setDesignVersion] = useState('dialog')
   const [settingsPagesByVersion, setSettingsPagesByVersion] = useState({ microphones: 'auto', settings: 'microphones' })
   const [showFeedback, setShowFeedback] = useState(false)
   const [detailTabsByVersion, setDetailTabsByVersion] = useState({ reference: 'zone', dialog: 'channel', microphones: 'channel', settings: 'channel' })
   const [configurations, setConfigurations] = useState(initialConfigurations)
-  const [configureOpen, setConfigureOpen] = useState(false)
+  const [configureOpen, setConfigureOpen] = useState(talkerPositionPreview)
   const [addGroupOpen, setAddGroupOpen] = useState(false)
-  const [mapSettingOpen, setMapSettingOpen] = useState(false)
+  const [mapSettingOpen, setMapSettingOpen] = useState(talkerPositionPreview)
   const [setupMapOpen, setSetupMapOpen] = useState(false)
   const [setupMapRequest, setSetupMapRequest] = useState(null)
   const [microphoneSidebar, setMicrophoneSidebar] = useState(null)
@@ -117,6 +118,7 @@ export default function App() {
   const currentGroupId = showZoneSettings ? selectedSettingsGroupId : showMicrophoneSetup ? selectedSetupGroupId : selectedGroupId
   const selectedGroup = viewGroups.find((group) => group.id === currentGroupId)
   const selectedGroupName = selectedGroup.name || selectedGroup.id
+  const selectedGroupEnabled = selectedGroup.enabled !== false
   const selectedMicrophone = microphones.find((microphone) => microphone.id === selectedGroup.microphoneId) || WORKSPACE_MICROPHONE
   const selectedDetailTab = detailTabsByVersion[designVersion]
   const showMicrophoneZones = isMicrophoneVersion && settingsPage === 'microphones'
@@ -206,11 +208,12 @@ export default function App() {
   }
 
   const openConfigure = () => {
+    if (!selectedGroupEnabled) return
     setConfigureOpen(true)
   }
 
   const saveConfiguration = (nextConfiguration) => {
-    if (viewOnly) return
+    if (viewOnly || !selectedGroupEnabled) return
     setConfigurations((current) => ({
       ...current,
       [designVersion]: { ...current[designVersion], [currentGroupId]: nextConfiguration },
@@ -219,6 +222,7 @@ export default function App() {
   }
 
   const openMapSetting = (draft) => {
+    if (!selectedGroupEnabled) return
     if (showZoneSettings) {
       setSettingsMapRequest((current) => ({
         token: (current?.token || 0) + 1,
@@ -399,7 +403,7 @@ export default function App() {
                 {detailTabs.map((tab) => <button key={tab} className={`detail-tab ${selectedDetailTab === tab ? 'is-active' : ''}`} id={`${tab}-tab`} type="button" role="tab" aria-selected={selectedDetailTab === tab} aria-controls={`${tab}-view`} tabIndex={selectedDetailTab === tab ? 0 : -1} onClick={() => setSelectedDetailTab(tab)} onKeyDown={handleDetailTabKeyDown}>{detailTabLabels[tab]}</button>)}
               </div>
               {selectedDetailTab !== 'zone' && <div className="detail-tab-actions">
-                {selectedDetailTab === 'channel' && <button className="button channel-configure-button" type="button" onClick={openConfigure}>Channel Configure</button>}
+                {selectedDetailTab === 'channel' && selectedGroupEnabled && <button className="button channel-configure-button" type="button" onClick={openConfigure}>Channel Configure</button>}
                 <button className="button time-button" type="button" disabled={viewOnly}><Icon name="clock" size={17} /><span>Time</span></button>
               </div>}
             </div>
@@ -422,7 +426,7 @@ export default function App() {
             <div className="zone-content" id="zone-view" role={designVersion === 'reference' ? 'tabpanel' : undefined} aria-labelledby={designVersion === 'reference' ? 'zone-tab' : undefined} hidden={designVersion !== 'reference' || selectedDetailTab !== 'zone'}>
               {configuration.pickupMode !== 'Talker Position' && <div className="map-mode-message">
                 <div><strong>Zone Map uses Talker Position</strong><p>Current pickup mode: {configuration.pickupMode}. Save Talker Position in Channel Configure to edit this map.</p></div>
-                <button className="button" type="button" onClick={openConfigure}>Channel Configure</button>
+                {selectedGroupEnabled && <button className="button" type="button" onClick={openConfigure}>Channel Configure</button>}
               </div>}
               <div key="reference" hidden={designVersion !== 'reference' || configuration.pickupMode !== 'Talker Position'}>
                 <ZoneMapPanel variant="reference" groupId={selectedGroup.id}
@@ -461,7 +465,7 @@ export default function App() {
       <AddGroupDialog open={profileVisible && !viewOnly && addGroupOpen} cameras={groupCameras} microphones={microphones}
         channelCounts={microphoneChannelCounts} existingNames={viewGroups.map((group) => group.name || group.id)}
         onClose={() => setAddGroupOpen(false)} onSave={addGroup} />
-      <ChannelConfigureDialog viewOnly={viewOnly} open={profileVisible && configureOpen} suspended={mapSettingOpen || setupMapOpen || settingsMapOpen} groupId={selectedGroupName} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
+      <ChannelConfigureDialog viewOnly={viewOnly} open={profileVisible && configureOpen && selectedGroupEnabled} suspended={mapSettingOpen || setupMapOpen || settingsMapOpen} groupId={selectedGroupName} initialMode={configuration.pickupMode} initialChannelInformation={configuration.channelInformation} mapIsTab={!usesMapDialog} onClose={() => setConfigureOpen(false)} onSave={saveConfiguration} onMapSetting={openMapSetting} />
       <MapSettingDialog microphone={mapEntryMicrophone} viewOnly={viewOnly} open={profileVisible && designVersion === 'dialog' && mapSettingOpen} groups={getMicrophoneGroups(groups, mapEntryMicrophone.id).map((group) => ({ ...group, pickupMode: configurations.dialog[group.id].pickupMode }))} initialGroupId={selectedGroupId} entryPickupMode={mapEntryMode} onToggleGroup={toggleGroup} onClose={() => setMapSettingOpen(false)} />
     </div>
     <UpgradePermissionDialog open={!settingsVisible && upgradeOpen} onClose={closeUpgrade} onVerify={verifyUpgrade} error={upgradeError} />

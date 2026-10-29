@@ -6,13 +6,13 @@ import './ChannelConfigureDialog.css';
 let openDialogs = 0;
 let bodyOverflowBeforeDialogs = '';
 
-export function useDialogFocus(open, dialogRef, onClose) {
+export function useDialogFocus(open, dialogRef, onClose, { includeVersionSwitcher = true, returnFocusRef } = {}) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
-    const previousFocus = document.activeElement;
+    const previousFocus = returnFocusRef?.current || document.activeElement;
     if (openDialogs === 0) {
       bodyOverflowBeforeDialogs = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -36,7 +36,7 @@ export function useDialogFocus(open, dialogRef, onClose) {
     const handleKey = (event) => {
       // The prototype version menu participates only while it is visible.
       const inVersionSwitcher = event.target instanceof Element && event.target.closest('.design-version-switcher');
-      if (inVersionSwitcher && (event.key !== 'Tab' || document.querySelector('.design-version-menu'))) return;
+      if (includeVersionSwitcher && inVersionSwitcher && (event.key !== 'Tab' || document.querySelector('.design-version-menu'))) return;
       const visibleDialogs = [...document.querySelectorAll('[data-mt-dialog]')]
         .filter((element) => element.getClientRects().length > 0 && !element.closest('[inert], [aria-hidden="true"]'));
       const highest = visibleDialogs.reduce((top, element) => (
@@ -51,7 +51,7 @@ export function useDialogFocus(open, dialogRef, onClose) {
       }
       if (event.key === 'Tab') {
         const versionTrigger = document.querySelector('.design-version-trigger');
-        const versionVisible = versionTrigger?.getClientRects().length > 0
+        const versionVisible = includeVersionSwitcher && versionTrigger?.getClientRects().length > 0
           && !versionTrigger.closest('[inert], [aria-hidden="true"]');
         const targets = [...focusable(), ...(versionVisible ? [versionTrigger] : [])];
         event.preventDefault();
@@ -70,7 +70,7 @@ export function useDialogFocus(open, dialogRef, onClose) {
       if (openDialogs === 0) document.body.style.overflow = bodyOverflowBeforeDialogs;
       if (!document.activeElement?.closest('.design-version-switcher') && previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
-  }, [open, dialogRef]);
+  }, [open, dialogRef, includeVersionSwitcher, returnFocusRef]);
 }
 
 export default function ChannelConfigureDialog({

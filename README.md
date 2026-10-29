@@ -9,7 +9,9 @@ npm install
 npm run dev
 ```
 
-開啟 http://127.0.0.1:5174 。
+開啟 http://127.0.0.1:5175 ，預設顯示 V2 Map Setting Dialog 的 Auto Mode Settings。
+
+Talker Position Zone Map 直達預覽：http://127.0.0.1:5175/?view=talker-position 。關閉地圖後回到 Channel Configure，可沿正常設定流程操作。
 
 ```powershell
 npm run build
@@ -52,10 +54,11 @@ npm run build
 - 當前 Group 的開關關閉時，該組的編輯地圖整體反灰並停用；重新開啟保留資料與視角，其他 Group 仍可切換查看。
 - Zone 拖曳或尺寸調整時，若與當前 Map 的另一個 Zone 重疊，會顯示紅色衝突狀態；在重疊處放開會回到拖曳前的完整位置與尺寸。其他 Group 的只讀參照不參與碰撞，僅邊界相接不算重疊。鍵盤與手動欄位也拒絕重疊結果。
 - Zone Map 整張格子地圖為 51 × 51 格。按住空白格拖曳可平移地圖；拖曳 Zone 移動區域，點擊空白處解除選取。平移只改變視角，不修改座標或尺寸。
+- No zones yet 時仍可平移、縮放及置中查看地圖，刪除最後一個 Zone 保留當前視角；Zone settings 維持停用，新增 Zone 後才可編輯。參照選單中尚無 Zone 的群組顯示 No zones configured，並停用該列勾選。
 - 地圖內右下角懸浮工具框提供 View／百分比、置中、縮小、放大與 Coordinates。Zone Map 滾輪及按鈕縮放限制為 25%～150%，Active Position 維持 25%～125%；置中同時清除平移並恢復 100%，不修改 Zone 幾何資料。
 - 切換分頁、Group 與設計版本保留本次開啟頁面的地圖資料；重新整理會還原展示資料。
 - Video & Audio、Network、NDI、System、Time 與 Re-configure 仍保留外觀。
-- 所有設定只影響本機原型；未連線到 MT300。51 × 51 格由使用者指定；每格延續原型 0.5 m 的比例（整張 25.5 × 25.5 m）、MIC-01、矩形 Zones 及 mic 中心原點仍為預覽假設，待設備規格確認。100% 延續原有顯示比例，整張地圖的邊緣可透過平移查看。
+- 所有設定只影響本機原型；未連線到 MT300。地圖為 51 × 51 格，每格 0.6 × 0.6 m（整張 30.6 × 30.6 m），Zone 最小寬高為 0.6 m。拖曳放大受目前可見範圍限制；數值輸入依整張 Map 範圍驗證，Zone 移出目前視野仍可套用。欄位輸入於 Enter／離開欄位時驗證，重疊、超出 Map 等錯誤統一顯示 Warning 視窗；按 OK 後恢復最後有效值，不使用欄位紅框或行內錯誤文字。拖曳重疊維持原本紅色預覽與拒絕套用，不開啟警告視窗。MIC-01、矩形 Zones 及 mic 中心原點仍為預覽假設。整張地圖的邊緣可透過平移查看。
 
 樣式變數位於 `src/index.css`，地圖元件位於 `src/components/PositionMap.jsx`。
 
