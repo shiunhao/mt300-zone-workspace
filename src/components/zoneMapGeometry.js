@@ -66,6 +66,22 @@ export function zoneFieldLimits(zone, bounds = MAP_BOUNDS) {
   };
 }
 
+export function moveZone(zone, dx, dy, visible = MAP_BOUNDS) {
+  if (dx === 0 && dy === 0) return zone;
+  const minX = Math.ceil((visible.left + zone.width / 2) * 100 - 0.000001) / 100;
+  const maxX = Math.floor((visible.right - zone.width / 2) * 100 + 0.000001) / 100;
+  const minY = Math.ceil((visible.bottom + zone.height / 2) * 100 - 0.000001) / 100;
+  const maxY = Math.floor((visible.top - zone.height / 2) * 100 + 0.000001) / 100;
+  // Numeric input can create a zone larger than the viewport. Preserve that
+  // geometry until zooming out makes it possible to drag the whole zone inside.
+  if (minX > maxX || minY > maxY) return zone;
+  return {
+    ...zone,
+    x: clamp(round(zone.x + dx), minX, maxX),
+    y: clamp(round(zone.y + dy), minY, maxY),
+  };
+}
+
 export function resizeZone(zone, corner, dx, dy, visible = MAP_BOUNDS) {
   const bounds = zoneBounds(zone);
   const minimumSize = Math.round(MIN_ZONE_SIZE * 200);

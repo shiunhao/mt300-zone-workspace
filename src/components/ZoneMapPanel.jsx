@@ -8,7 +8,7 @@ import { getGroupReferenceColor } from './groupReferenceColors';
 import { WORKSPACE_MICROPHONE } from './workspaceGeometry';
 import { getOffscreenMicrophone } from './offscreenMicrophone';
 import { GRID_CELLS, CELL_SIZE, UNITS_PER_METER, MIN_ZONE_SIZE, WORLD_SIZE, ORIGIN, MAP_EXTENT,
-  clamp, constrainZone, mapRect, conflictsWithMap, resizeZone, visibleMapBounds, zoneFieldLimits } from './zoneMapGeometry';
+  clamp, constrainZone, mapRect, conflictsWithMap, moveZone, resizeZone, visibleMapBounds, zoneFieldLimits } from './zoneMapGeometry';
 import './ZoneMapPanel.css';
 
 const BASE_VIEW_WIDTH = 1200;
@@ -370,7 +370,7 @@ export default function ZoneMapPanel({
     const dx = (point.x - drag.point.x) / UNITS_PER_METER;
     const dy = (point.y - drag.point.y) / UNITS_PER_METER;
     let candidate;
-    if (drag.action === 'move') candidate = constrainZone({ ...drag.zone, x: drag.zone.x + dx, y: drag.zone.y - dy });
+    if (drag.action === 'move') candidate = moveZone(drag.zone, dx, -dy, visibleBounds);
     else candidate = resizeZone(drag.zone, drag.corner, dx, dy, visibleBounds);
     drag.candidate = candidate;
     drag.conflicting = conflictsWithMap(candidate, currentZones);
@@ -420,7 +420,7 @@ export default function ZoneMapPanel({
     else if (editable && ownerId === groupId && shifts[event.key]) {
       event.preventDefault(); selectZone(zone.id);
       const [dx, dy] = shifts[event.key];
-      updateZone(zone.id, { x: zone.x + dx, y: zone.y + dy });
+      updateZone(zone.id, moveZone(zone, dx, dy, visibleBounds));
     }
   }
   function resizeKeyDown(event, zone, corner) {

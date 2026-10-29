@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GRID_CELLS, CELL_SIZE, UNITS_PER_METER, MIN_ZONE_SIZE, WORLD_METERS, MAP_EXTENT,
-  constrainZone, mapRect, resizeZone, visibleMapBounds, zoneFieldLimits } from './zoneMapGeometry.js';
+  constrainZone, mapRect, moveZone, resizeZone, visibleMapBounds, zoneFieldLimits } from './zoneMapGeometry.js';
 
 const zone = { id: 'zone-1', name: 'Zone 1', x: 0, y: 0, width: 2, height: 1.6 };
 const view = { left: -6, right: 6, bottom: -4, top: 4 };
@@ -75,4 +75,41 @@ test('numeric entries may leave the viewport but must keep the zone inside the f
   assert.equal(limits.width.max, 30.6);
   assert.ok(9999 > limits.width.max);
   assert.ok(15 > limits.x.max);
+});
+
+for (const [name, dx, dy] of [['left', -100, 0], ['right', 100, 0], ['top', 0, 100], ['bottom', 0, -100], ['corner', 100, 100]]) {
+  test(`dragging toward the ${name} keeps the whole zone in the current canvas`, () => {
+    const result = moveZone(zone, dx, dy, view);
+    const box = edges(result);
+    assert.ok(box.left >= view.left && box.right <= view.right);
+    assert.ok(box.bottom >= view.bottom && box.top <= view.top);
+    assert.equal(result.width, zone.width);
+    assert.equal(result.height, zone.height);
+  });
+}
+
+test('dragging follows a panned viewport and clamps decimal bounds inward', () => {
+  const movedView = visibleMapBounds({ panX: 200, panY: -100, visibleWidth: 1200, visibleHeight: 800 });
+  const result = moveZone({ ...zone, x: 2, y: 1, width: 3.5, height: 2.5 }, 100, 100, movedView);
+  near(edges(result).right, movedView.right);
+  near(edges(result).top, movedView.top);
+});
+
+test('a partially visible zone moves fully inside without changing its numeric size', () => {
+  const outside = { ...zone, x: 5.8 };
+  assert.deepEqual(moveZone(outside, 0, 0, view), outside);
+  const result = moveZone({ ...zone, x: 5.8 }, 0.1, 0, view);
+  near(result.x, 5);
+  assert.equal(result.width, 2);
+});
+
+test('a numerically enlarged zone stays unchanged until zooming out permits dragging', () => {
+  const large = { ...zone, width: 13, height: 9 };
+  assert.deepEqual(moveZone(large, 1, 1, view), large);
+  const wider = { left: -12, right: 12, bottom: -8, top: 8 };
+  const result = moveZone(large, 1, 1, wider);
+  assert.equal(result.x, 1);
+  assert.equal(result.y, 1);
+  assert.equal(result.width, 13);
+  assert.equal(result.height, 9);
 });
