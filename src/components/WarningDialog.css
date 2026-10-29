@@ -2,7 +2,7 @@
 .warning-dialog { width: 420px; max-width: 100%; max-height: calc(100svh - 48px); overflow-y: auto; border: 1px solid var(--line-2); border-radius: 6px; background: var(--panel); color: var(--text); box-shadow: 0 16px 48px #0009; }
 .warning-dialog header { padding: 20px 24px 12px; text-align: center; }
 .warning-dialog h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 28px; }
-.warning-dialog__message { margin: 0; padding: 12px 24px 24px; font-size: 14px; line-height: 22px; text-align: center; overflow-wrap: anywhere; }
+.warning-dialog__message { margin: 0; padding: 12px 24px 24px; font-size: 14px; line-height: 22px; text-align: center; white-space: pre-line; overflow-wrap: anywhere; }
 .warning-dialog footer { display: flex; justify-content: center; padding: 8px 24px 20px; }
 .warning-dialog__confirm { min-width: 120px; height: 36px; }
 body:has(.warning-dialog-overlay) .design-version-switcher { visibility: hidden; }

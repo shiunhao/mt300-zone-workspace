@@ -37,6 +37,11 @@ const INITIAL_GROUPS = {
 };
 const copyZones = (zones) => zones.map((zone) => ({ ...zone }));
 
+function rangeWarning(value, { min, max }) {
+  const reason = value > max ? 'too large' : value < min ? 'too small' : '';
+  return reason ? `Value is ${reason}.\nMinimum: ${min} m · Maximum: ${max} m.` : '';
+}
+
 function NumericField({ label, value, min, max, disabled, onCommit }) {
   const inputRef = useRef(null);
   const dirty = useRef(false);
@@ -65,8 +70,8 @@ function NumericField({ label, value, min, max, disabled, onCommit }) {
       return;
     }
     const requested = Math.round(next * 10) / 10;
-    if (requested > max) { setWarning('Value is too large.'); return; }
-    if (requested < min) { setWarning('Value is too small.'); return; }
+    const rangeError = rangeWarning(requested, { min, max });
+    if (rangeError) { setWarning(rangeError); return; }
     const rejected = onCommit(requested);
     setWarning(rejected || '');
     if (!rejected) setInput(String(requested));
@@ -267,8 +272,8 @@ export default function ZoneMapPanel({
   }
   function commitField(field, value) {
     if (!selectedZone || !editable) return 'This zone is read-only.';
-    if (value > fieldLimits[field].max) return 'Value is too large.';
-    if (value < fieldLimits[field].min) return 'Value is too small.';
+    const rangeError = rangeWarning(value, fieldLimits[field]);
+    if (rangeError) return rangeError;
     if (!updateZone(selectedZone.id, { [field]: value })) return 'Zone overlaps another zone.';
     setFeedback('Zone updated.');
     return '';
