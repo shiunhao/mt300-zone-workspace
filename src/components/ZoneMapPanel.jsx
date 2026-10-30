@@ -122,7 +122,10 @@ export default function ZoneMapPanel({
     (groups.length ? groups.map((group) => group.id) : Object.keys(INITIAL_GROUPS))
       .map((id) => [id, 'zone-1']),
   ));
-  const [references, setReferences] = useState({ G1: false, G2: false, G3: false });
+  const [referencesByContext, setReferencesByContext] = useState({});
+  // Each editing group remembers its own references within its microphone.
+  const referenceKey = JSON.stringify([microphone.id, groupId]);
+  const references = referencesByContext[referenceKey] || {};
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setPanning] = useState(false);
   const [dragPreview, setDragPreview] = useState(null);
@@ -314,7 +317,10 @@ export default function ZoneMapPanel({
   }
   function changeReference(id, isChecked) {
     if (!isInteractive || !referenceOptions.some((group) => group.id === id && group.zoneCount > 0)) return;
-    setReferences((previous) => ({ ...previous, [id]: isChecked }));
+    setReferencesByContext((previous) => ({
+      ...previous,
+      [referenceKey]: { ...previous[referenceKey], [id]: isChecked },
+    }));
   }
   function svgPoint(event, inverseMatrix) {
     if (!mapInteractive) return null;

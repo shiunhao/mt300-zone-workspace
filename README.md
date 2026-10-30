@@ -48,7 +48,7 @@ npm run build
 - 新版支援 Zone 新增、選取、刪除、拖曳、四角尺寸調整，以及 X／Y／Width／Height 手動輸入。四角把手拖曳時固定對角，尺寸與座標欄位同步更新。選取狀態以加粗亮色框線與較深填色呈現，點擊地圖空白處解除選取。
 - 每個當前 Group 的 Zone 中心以虛線連接 mic，拖曳、調整尺寸或輸入數值時同步更新。
 - 桌面版三個分頁共用可用畫面高度；Zone Map 背景容器內整合麥克風型號、Add Zone、Remove Zone 與 View Other Groups’ Zones 下拉選單，右側設定面板分開。麥克風 ID 標題、Map 狀態 Badge、Reference groups 標題、底部圖例與展示文字已移除。
-- View Other Groups’ Zones 下拉清單可用 Checkbox 複選參照 Groups，預設全部不勾選；勾選立即顯示對應 Zones，取消即隱藏。清單超過可用高度時只在選單內捲動。
+- View Other Groups’ Zones 下拉清單可用 Checkbox 複選參照 Groups，預設全部不勾選；勾選立即顯示對應 Zones，取消即隱藏。勾選狀態依麥克風與目前 Group 獨立記憶，切換 Group、關閉再開啟地圖時保留，各組互不影響；參照內容仍同步顯示來源 Group 的最新 Zone 設定。重新整理回到預設未勾選。清單超過可用高度時只在選單內捲動。
 - 參考 Group 依 ID 使用固定顏色，選單色點與地圖虛線一致；G1 為橘色、G3 為紫色。當前 Group 的 Zone 保持藍色，重疊衝突使用紅色。
 - 移除右側 Zone settings 的 Editable 字樣與分頁列右上方 Pickup Mode 文字，模式用途直接顯示在 Zone Map (Talker Position) 分頁名稱。較長分頁使用較寬區域，保留切換動畫。
 - 當前 Group 的開關關閉時，該組的編輯地圖整體反灰並停用；重新開啟保留資料與視角，其他 Group 仍可切換查看。
