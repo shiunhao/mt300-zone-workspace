@@ -39,8 +39,8 @@ const copyZones = (zones) => zones.map((zone) => ({ ...zone }));
 const centimeters = (meters) => Math.round(meters * UNITS_PER_METER);
 
 function rangeWarning(value, { min, max }) {
-  const reason = value > max ? 'too large' : value < min ? 'too small' : '';
-  return reason ? `Value is ${reason}.\nMinimum: ${centimeters(min)} CM · Maximum: ${centimeters(max)} CM.` : '';
+  return value > max || value < min
+    ? `Invalid value.\nMinimum: ${centimeters(min)} CM · Maximum: ${centimeters(max)} CM.` : '';
 }
 
 function NumericField({ label, value, min, max, disabled, onCommit }) {
