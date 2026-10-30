@@ -4,7 +4,6 @@ import { useDialogFocus } from './ChannelConfigureDialog';
 import './WarningDialog.css';
 
 export default function WarningDialog({ open, message, onClose, returnFocusRef }) {
-  const titleId = useId();
   const messageId = useId();
   const overlayRef = useRef(null);
   const dialogRef = useRef(null);
@@ -34,9 +33,8 @@ export default function WarningDialog({ open, message, onClose, returnFocusRef }
   return createPortal(
     <div className="warning-dialog-overlay" ref={overlayRef}>
       <section className="warning-dialog" role="alertdialog" aria-modal="true"
-        aria-labelledby={titleId} aria-describedby={messageId} tabIndex={-1}
+        aria-label="Warning" aria-describedby={messageId} tabIndex={-1}
         ref={dialogRef} data-mt-dialog data-modal-level="1600">
-        <header><h2 id={titleId}>Warning</h2></header>
         <p className="warning-dialog__message" id={messageId}>{message}</p>
         <footer><button className="button warning-dialog__confirm" type="button" onClick={onClose} data-initial-focus>OK</button></footer>
       </section>
